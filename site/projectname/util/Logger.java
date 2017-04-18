@@ -2,10 +2,12 @@ package site.projectname.util;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+
 
 
 /**
@@ -81,16 +83,17 @@ public class Logger {
 		File dir2 = new File(dir, creator);
 		if(!dir2.exists())
 			try{dir2.mkdir();System.out.println("Making " +creator+" Directory!");}catch(Exception e){}
-		File log = new File(dir2, dateFormat.format(new Date()) + ".log");
+		File log = new File(dir2, creator + dateFormat.format(new Date()) + ".log");
 		try {
 			log.createNewFile();
 			writer = new PrintWriter(log);
 			write("Log created by "+creator+".");
-			spacer();
 		} catch(Exception e){e.printStackTrace();}
 		System.out.println("Log for " + creator + " started!");
 		Logger.logs.put(creator, this);
 	}
+
+
 
 	/**
 	 * Prints an exception to the log
@@ -98,7 +101,14 @@ public class Logger {
 	 */
 	public void writeError(Exception e) {
 		writer.println(timeStamp.format(new Date()) + "ERROR!");
-		e.printStackTrace(writer);
+		StringWriter sw = new StringWriter();
+		e.printStackTrace(new PrintWriter(sw));
+		String error = sw.toString();
+		error = timeStamp.format(new Date())+error;
+		error = error.replace("\n","\n"+timeStamp.format(new Date()));
+		writer.println(error);
+		if(this.debug)
+			System.out.println(error);
 		writer.flush();
 	}
 	/**
