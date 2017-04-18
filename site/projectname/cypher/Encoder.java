@@ -68,11 +68,7 @@ public class Encoder{
      * @param   key Given value to be used as the key for the header tree
      */
     public Encoder(char key){
-        if(Logger.logs.containsKey("Encoder")){
-            log = Logger.logs.get("Encoder");
-        } else {
-            log = new Logger("Encoder");
-        }
+        log = Logger.getLog("Encoder",Logger.debug);
         cypher.put(key, new CypherTree(key));
         for(int i=32;i<127;i++){
             //TODO Make this vary based on the key

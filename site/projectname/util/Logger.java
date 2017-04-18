@@ -23,12 +23,39 @@ import java.util.HashMap;
 public class Logger {
 	private PrintWriter writer;
 	private Logger(){} 		//Prevents instantizing
-	private static DateFormat timeStamp = new SimpleDateFormat("[HH:mm:ss] - ");
-	private boolean debug = false;
+	public static boolean debug = false;
 	/**
 	 * Map of all currently running logs.
 	 */
 	public static HashMap<String, Logger> logs = new HashMap<String,Logger>();
+	private static DateFormat timeStamp = new SimpleDateFormat("[HH:mm:ss] - ");
+	/**
+	 * Checks log map for pre-existing log, if no log has been created, makes and returns new Logger
+	 * @param	name	Name of log to create or get
+	 * @param	debug	Debug state if new log is needed
+	 * @return			Log with name and debug state set
+	 */
+	public static Logger getLog(String name, boolean debug){
+		if(logs.containsKey(name)){
+			return logs.get(name);
+		} else {
+			return new Logger(name,debug);
+		}
+	}
+	/**
+	 * Checks log map for pre-existing log, if no log has been created, makes and returns new Logger
+	 * @param	name	Name of log to create or get
+	 * @param	format	Time-Stamp format if new log is required
+	 * @param	debug	Debug state if new log is needed
+	 * @return			Log with name and debug state set
+	 */
+	public static Logger getLog(String name, SimpleDateFormat format, boolean debug){
+		if(logs.containsKey(name)){
+			return logs.get(name);
+		} else {
+			return new Logger(name,format,debug);
+		}
+	}
 
 	/**
 	 * Starts the Logger, also including a given name of what started the log.
@@ -47,7 +74,6 @@ public class Logger {
 		try {
 			writer = new PrintWriter(log);
 			write("Log created by "+creator+".");
-			spacer();
 		} catch(Exception e){e.printStackTrace();}
 		System.out.println("Log for " + creator + " started!");
 		Logger.logs.put(creator, this);
@@ -63,6 +89,24 @@ public class Logger {
 		this(creator);
 		this.debug = debug;
 		if(debug){
+			spacer();
+			write("Debug enabled!");
+			spacer();
+		}
+	}
+	/**
+	 * Starts the Logger, also including a given name of what started the log.
+	 * Also adds itself to the logs map, allowing it to be accessed
+	 *
+	 * @param	creator		Package, Class, or other catagory that created and uses the log
+	 * @param	logName	Alternate naming convention for log titles
+	 * @param	debug		Determines if Debugging is enabled. used to toggle verbose output
+	 */
+	public Logger(String creator, SimpleDateFormat logName, boolean debug){
+		this(creator, logName);
+		this.debug = debug;
+		if(debug){
+			spacer();
 			write("Debug enabled!");
 			spacer();
 		}
@@ -118,6 +162,8 @@ public class Logger {
 	public void write(String in) {
 		String time = timeStamp.format(new Date());
 		writer.println(time + in);
+		if(this.debug)
+			System.out.println(time+in);
 		writer.flush();
 	}
 	/**
@@ -126,6 +172,8 @@ public class Logger {
 	 */
 	public void writeNoStamp(String in) {
 		writer.println(in);
+		if(this.debug)
+			System.out.println(in);
 		writer.flush();
 	}
 	/**
@@ -133,6 +181,8 @@ public class Logger {
 	 */
 	public void spacer() {
 		writer.println("=--------------------------------------------------=");
+		if(this.debug)
+			System.out.println("=--------------------------------------------------=");
 		writer.flush();
 	}
 	/**
@@ -143,6 +193,8 @@ public class Logger {
 	public void printf(String in, Object... args){
 		writer.print(timeStamp.format(new Date()));
 		writer.printf(in, args);
+		if(this.debug)
+			System.out.printf(in,args);
 		writer.flush();
 	}
 	/**
@@ -151,7 +203,15 @@ public class Logger {
 	 */
 	public void debug(String in){
 		if(this.debug){
-			write("\tDEBUG:\t"+in);
+			write("DEBUG:\t"+in);
+		}
+	}
+	/**
+	 * Used for verbose output, writes spacer if debug is enabled
+	 */
+	public void debugSpacer(){
+		if(this.debug){
+			spacer();
 		}
 	}
 }

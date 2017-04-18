@@ -6,6 +6,7 @@ import java.util.Random;
 
 import site.projectname.util.Logger;
 
+
 /**
  * Encryption System based on Tree Addresses
  * A given "key" is used as a seed to populate a tree with most ascii characters,
@@ -26,11 +27,7 @@ class CypherTree{
      * @param   head    A given "key" for the tree
      */
     public CypherTree(char head){
-        if(Logger.logs.containsKey("CypherTree")){
-            log = Logger.logs.get("CypherTree");
-        } else {
-            log = new Logger("CypherTree");
-        }
+        log = Logger.getLog("CypherTree",Logger.debug);
         r = new Random((int)head);
         head -= 97;
         int[] order = new int[97];
