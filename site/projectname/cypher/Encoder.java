@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 import site.projectname.util.Logger;
-
+import site.projectname.util.Numbers;
 
 /**
  * Provides explicit methods for the CypherTree class as an encryption method
@@ -18,49 +18,9 @@ import site.projectname.util.Logger;
 public class Encoder{
 
     private HashMap<Character,CypherTree> cypher = new HashMap<Character,CypherTree>();
-    private final static HashMap<String,String> hexMap = new HashMap<String,String>();
     private final char key;
 
     private Logger log;
-
-    /**
-     * Initializes a HashMap<String,String> to contain key-value pairs that convert to/from hex
-     * Must be called before hexMap can be used.
-     */
-    public static void initHexMap(){
-        hexMap.put("0000","0");
-        hexMap.put("0001","1");
-        hexMap.put("0010","2");
-        hexMap.put("0011","3");
-        hexMap.put("0100","4");
-        hexMap.put("0101","5");
-        hexMap.put("0110","6");
-        hexMap.put("0111","7");
-        hexMap.put("1000","8");
-        hexMap.put("1001","9");
-        hexMap.put("1010","A");
-        hexMap.put("1011","B");
-        hexMap.put("1100","C");
-        hexMap.put("1101","D");
-        hexMap.put("1110","E");
-        hexMap.put("1111","F");
-        hexMap.put("0","0000");
-        hexMap.put("1","0001");
-        hexMap.put("2","0010");
-        hexMap.put("3","0011");
-        hexMap.put("4","0100");
-        hexMap.put("5","0101");
-        hexMap.put("6","0110");
-        hexMap.put("7","0111");
-        hexMap.put("8","1000");
-        hexMap.put("9","1001");
-        hexMap.put("A","1010");
-        hexMap.put("B","1011");
-        hexMap.put("C","1100");
-        hexMap.put("D","1101");
-        hexMap.put("E","1110");
-        hexMap.put("F","1111");
-    }
 
 
     /**
@@ -104,7 +64,7 @@ public class Encoder{
         for(char c: out.toCharArray()){
             temp += c;
             if(temp.length() == 4){
-                out2+=hexMap.get(temp);
+                out2+=Numbers.hexMap.get(temp);
                 temp = "";
             }
         }
@@ -121,8 +81,8 @@ public class Encoder{
         String temp = "";
 
         for(char c: in.toCharArray()){
-            log.write(c +" -> " + hexMap.get(c+""));
-            temp += hexMap.get(c+"");
+            log.write(c +" -> " + Numbers.hexMap.get(c+""));
+            temp += Numbers.hexMap.get(c+"");
         }
         in = temp;
         log.write(temp);
@@ -163,7 +123,14 @@ public class Encoder{
     }
 
     public static void main(String args[]){
-        Encoder.initHexMap();
+        if(args.length == 0)
+            Logger.debug = false;
+        else if(args[0].equals("-debug") || args[0].equals("-v"))
+            Logger.debug = true;
+        else
+            Logger.debug = false;
+
+        Numbers.init();
         Encoder e = new Encoder('*');
         Scanner sc = new Scanner(System.in);
         String s = e.encode(sc.nextLine());
