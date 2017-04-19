@@ -28,7 +28,7 @@ public class Encoder{
      * @param   key Given value to be used as the key for the header tree
      */
     public Encoder(char key){
-        log = Logger.getLog("Encoder",Logger.debug);
+        log = Logger.getLog("Encoder",Logger.debugGlobal);
         cypher.put(key, new CypherTree(key));
         for(int i=32;i<127;i++){
             //TODO Make this vary based on the key
@@ -124,11 +124,11 @@ public class Encoder{
 
     public static void main(String args[]){
         if(args.length == 0)
-            Logger.debug = false;
+            Logger.debugGlobal = false;
         else if(args[0].equals("-debug") || args[0].equals("-v"))
-            Logger.debug = true;
+            Logger.debugGlobal = true;
         else
-            Logger.debug = false;
+            Logger.debugGlobal = false;
 
         Numbers.init();
         Encoder e = new Encoder('*');

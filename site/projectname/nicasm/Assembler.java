@@ -93,7 +93,7 @@ public class Assembler{
                 System.err.println("Proper usage : java site.projectname.nicasm.Assembler [-debug] filename ");
                 System.exit(-1);
             }
-            Logger.debug = true;
+            Logger.debugGlobal = true;
             Assembler.fileName = args[1];
         } else {
             if(args[0].equals("-debug") || args[0].equals("-h") || args[0].equals("--help")){
@@ -101,7 +101,7 @@ public class Assembler{
                 System.err.println("Proper usage : java site.projectname.nicasm.Assembler [-debug] filename ");
                 System.exit(-1);
             }
-            Logger.debug = false;
+            Logger.debugGlobal = false;
             Assembler.fileName = args[0];
         }
 
@@ -109,7 +109,7 @@ public class Assembler{
          * Report start, create logs
          */
         System.out.println("Assembler Starting!");
-        Assembler.log = Logger.getLog("Assembler",new SimpleDateFormat(""),Logger.debug);
+        Assembler.log = Logger.getLog("Assembler",new SimpleDateFormat(""),Logger.debugGlobal);
         Assembler.log.write("Assembling file " + fileName);
         /*
          * If file does not end with .nic, warn that .nic file is expected, but continue

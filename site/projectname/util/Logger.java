@@ -7,7 +7,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-
+import java.util.Arrays;
 
 
 /**
@@ -23,7 +23,8 @@ import java.util.HashMap;
 public class Logger {
 	private PrintWriter writer;
 	private Logger(){} 		//Prevents instantizing
-	public static boolean debug = false;
+	public static boolean debugGlobal = false;
+	private boolean debug = false;
 	/**
 	 * Map of all currently running logs.
 	 */
@@ -75,7 +76,8 @@ public class Logger {
 			writer = new PrintWriter(log);
 			write("Log created by "+creator+".");
 		} catch(Exception e){e.printStackTrace();}
-		System.out.println("Log for " + creator + " started!");
+		if(!debug)
+			System.out.println("Log for " + creator + " started!");
 		Logger.logs.put(creator, this);
 	}
 
@@ -133,7 +135,8 @@ public class Logger {
 			writer = new PrintWriter(log);
 			write("Log created by "+creator+".");
 		} catch(Exception e){e.printStackTrace();}
-		System.out.println("Log for " + creator + " started!");
+		if(!debug)
+			System.out.println("Log for " + creator + " started!");
 		Logger.logs.put(creator, this);
 	}
 
@@ -203,7 +206,13 @@ public class Logger {
 	 */
 	public void debug(String in){
 		if(this.debug){
-			write("DEBUG:\t"+in);
+			StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+			String className = stackTraceElements[2].getClassName();
+			String methodName = stackTraceElements[2].getMethodName();
+			int lineNum = stackTraceElements[2].getLineNumber();
+			if(className.startsWith("site.projectname"))
+				className = className.split("[.]")[className.split("[.]").length-1];
+			printf(timeStamp.format(new Date())+"DEBUG:\t%-35s|-| %s\n",(className+"."+methodName+"():"+lineNum),in);
 		}
 	}
 	/**

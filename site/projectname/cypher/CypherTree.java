@@ -27,7 +27,7 @@ class CypherTree{
      * @param   head    A given "key" for the tree
      */
     public CypherTree(char head){
-        log = Logger.getLog("CypherTree",Logger.debug);
+        log = Logger.getLog("CypherTree",Logger.debugGlobal);
         r = new Random((int)head);
         head -= 97;
         int[] order = new int[97];
