@@ -94,8 +94,8 @@ public class Numbers{
      * @return              Binary value of input.
      */
     public static String decToBin(int decimal,int n){
-        String out = "";
         log.debug("Converting " + decimal + " to Binary!");
+        String out = "";
         while(decimal > 0){
             int r = decimal % 2;
             out = (char)(r+48) + out;
@@ -169,7 +169,7 @@ public class Numbers{
             bin = '0' + bin;
         String out = "";
         while(bin.length() > 0){
-            log.debug(bin.substring(0,4));
+            log.debug(bin.substring(0,4) +"->"+ hexMap.get(bin.substring(0,4)+""));
             out += hexMap.get(bin.substring(0,4)+"");
             bin = bin.substring(4);
         }
@@ -214,7 +214,10 @@ public class Numbers{
         hexMap.put("D","1101");
         hexMap.put("E","1110");
         hexMap.put("F","1111");
-        for(String key: hexMap.keySet())
-            log.debug(key+":"+hexMap.get(key));
+    }
+    public static void main(String[] args){
+        init();
+        for(int i=0;i>-50;i--)
+            decToBin(i,8);
     }
 }

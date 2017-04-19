@@ -1,10 +1,12 @@
 package site.projectname.nicasm;
 
-import java.text.SimpleDateFormat;
-import java.util.Scanner;
-import java.util.Arrays;
 import java.io.File;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Scanner;
 
 
 import site.projectname.util.Logger;
@@ -18,31 +20,39 @@ import site.projectname.util.Numbers;
  */
 public class Assembler{
 
+    /**
+     * Name of the file to compile
+     */
     public static String fileName;
-    public static Logger log;
+
+    private static Logger log;
     private static Scanner inFile;
     private static PrintWriter outFile;
     private static int lineNumber = 1;
+    private static HashMap<String,Integer> labels = new HashMap<String,Integer>();
+    private static HashMap<String,Integer> variables = new HashMap<String,Integer>();
+    private static ArrayList<String> errors = new ArrayList<String>();
     /**
      * All valid Assembly Commands for nic
      */
     public enum Command {
-        ADD("ADD", "(ADD)[ ]+" + regRegEx + spaRegEx + regRegEx + spaRegEx + "(" + regRegEx + "|" + immRegEx + ")", "0001", "DR SR1 XXX SR2"),
-        AND("AND", "(AND)[ ]+" + regRegEx + spaRegEx + regRegEx + spaRegEx + "(" + regRegEx + "|" + immRegEx + ")", "0101", "DR SR1 XXX SR2"),
-        BR("BR","(BR)([Z]|[N]|[P]){0,3}","0000","XXX XXXXXXXXX"),
-        JMP("JMP","(JMP)[ ]+" + regRegEx, "1100", "000 BR 000000"),
-        JSRR,
-        LD,
-        LDI,
-        LDR,
-        LEA,
-        NOT,
-        RET,
-        RTI,
-        ST,
-        STI,
-        STR,
-        TRAP;
+        ADD ("ADD",  "(ADD)([\\s]+)" + regRegEx + spaRegEx + regRegEx + spaRegEx + "(" + regRegEx + "|" + immRegEx5 + ")",   "0001", "DR SR1 XXX SR2 "),
+        AND ("AND",  "(AND)([\\s]+)" + regRegEx + spaRegEx + regRegEx + spaRegEx + "(" + regRegEx + "|" + immRegEx5 + ")",   "0101", "DR SR1 XXX SR2 "),
+        BR  ("BR",   "(BR)[Z]?[N]?[P]?([\\s]+)" + labRegEx,                                                                  "0000", "XXX XXXXXXXXX  "),
+        JMP ("JMP",  "(JMP)([\\s]+)" + regRegEx,                                                                             "1100", "000 BR 000000  "),
+        JSR ("JSR",  "(JSR)([\\s]+)" + labRegEx,                                                                             "0100", "1 XXXXXXXXXXX  "),
+        JSRR("JSRR", "(JSRR)([\\s]+)"+ regRegEx,                                                                             "0100", "000 BR 000000  "),
+        LD  ("LD",   "(LD)([\\s]+)"  + regRegEx + spaRegEx + labRegEx,                                                       "0010", "DR XXXXXXXXX   "),
+        LDI ("LDI",  "(LDI)([\\s]+)" + regRegEx + spaRegEx + labRegEx,                                                       "1010", "DR XXXXXXXXX   "),
+        LDR ("LDR",  "(LDR)([\\s]+)" + regRegEx + spaRegEx + regRegEx + spaRegEx + "("+labRegEx+"|"+immRegEx6+")",           "0110", "DR BR XXXXXX   "),
+        LEA ("LEA",  "(LEA)([\\s]+)" + regRegEx + spaRegEx + labRegEx,                                                       "1110", "DR XXXXXXXXX   "),
+        NOT ("NOT",  "(NOT)([\\s]+)" + regRegEx + spaRegEx + regRegEx,                                                       "1001", "DR SR 111111   "),
+        RET ("RET",  "(RET)([\\s]*)",                                                                                        "1100", "000111000000   "),
+        RTI ("RTI",  "(RTI)([\\s]*)",                                                                                        "1000", "000000000000   "),
+        ST  ("ST",   "(ST)([\\s]+)"  + regRegEx + spaRegEx + labRegEx,                                                       "0011", "SR XXXXXXXXX   "),
+        STI ("STI",  "(STI)([\\s]+)" + regRegEx + spaRegEx + labRegEx,                                                       "1011", "SR XXXXXXXXX   "),
+        STR ("STR",  "(STR)([\\s]+)" + regRegEx + spaRegEx + regRegEx + spaRegEx + "("+labRegEx+"|"+immRegEx6+")",           "0111", "SR BR XXXXXX   "),
+        TRAP("TRAP", "(TRAP)([\\s]+)("+labRegEx +"|"+immRegEx8+")",                                                          "1111", "0000 XXXXXXXX  ");
         public final String regex;
         public final String firstFour;
         public final String syntax;
@@ -71,100 +81,330 @@ public class Assembler{
      * Regex for Register inputs, i.e. R0-R7
      */
     public final static String  regRegEx = "(R[0-7])";
-
+    /**
+     * Regex for spaces between arguments
+     */
     public final static String  spaRegEx = "([,][ ]*)";
+    /**
+     * Regex for hexadecimal immediate value (x00 - x1F) (5 Bits)
+     */
+    public final static String  hexRegEx5 = "([x]([0,1]([0-9]|[A-F])))";
+    /**
+     * Regex for decimal immediate value (00-31) (5 Bits)
+     */
+    public final static String  decRegEx5 = "([#](([0-2]?[0-9])|([3][0-1])))";
+    /**
+     * Regex for any immediate value (6 Bits)
+     */
+    public final static String  immRegEx5 = "("+hexRegEx5 + "|" + decRegEx5 +")";
+    /**
+     * Regex for hexadecimal immediate value (x00 - x3F) (6 Bits)
+     */
+    public final static String  hexRegEx6 = "([x]([0-3]?([0-9]|[A-F])))";
+    /**
+     * Regex for decimal immediate value (00-63) (6 Bits)
+     */
+    public final static String  decRegEx6 = "([#](([0-5]?[0-9])|([6][0-3])))";
+    /**
+     * Regex for any immediate value (6 Bits)
+     */
+    public final static String  immRegEx6 = "("+hexRegEx6 + "|" + decRegEx6 +")";
+    /**
+     * Regex for hexadecimal immediate value (x00 - xFF) (8 Bits)
+     */
+    public final static String  hexRegEx8 = "([x]([0-9]|[A-F]){1,2})";
+    /**
+     * Regex for decimal immediate value (00-255) (8 Bits)
+     */
+    public final static String  decRegEx8 = "([#]([0-2]?[0-9]?[0-9]?))";
+    /**
+     * Regex for any immediate value (8 Bits)
+     */
+    public final static String  immRegEx8 = "("+hexRegEx8 + "|" + decRegEx8 +")";
 
-    public final static String  hexRegEx = "([x]([0,1]([0-9]|[A-F])))";
 
-    public final static String  decRegEx = "([#](([0-2]{0,1}[0-9])|([3][0-1])))";
 
-    public final static String  immRegEx = hexRegEx + "|" + decRegEx;
+    /**
+     * Regex for a label
+     */
+    public final static String labRegEx = "([*][A-Z]*)";
 
+    /**
+     * Regex for a variable
+     */
+    public final static String varRegEx = "([$][A-Z]*)";
+
+    /**
+     * Regex for all valid characters
+     */
+    public final static String valRegEx = "[0-9]|[A-Z]|[,]|[ ]|[*]|[$]|[x]|[#]";
+
+
+    /**
+     * Searches for Variables and Labels to get their position
+     * @param   line    line to parse
+     */
+    public static String firstPass(String line){
+        String l = line.split("([\\s]+)")[0];
+        if(l.startsWith("$")){
+            if(l.matches(varRegEx)){
+                log.debug("Variable " + l + " found on line " + lineNumber);
+                variables.put(l,lineNumber);
+            } else {
+                log.debug("Invalid variable " + l + " on line " + lineNumber);
+                errors.add("Invalid Variable " + l + " on line " + lineNumber + "\n\t\t" + line);
+            }
+        } else if (l.startsWith("*")){
+            if(l.matches(labRegEx)){
+                log.debug("Label " + l + " found on line " + lineNumber);
+                labels.put(l,lineNumber);
+            } else {
+                log.debug("Invalid label " + l + " on line " + lineNumber);
+                errors.add("Invalid Label " + l + " on line " + lineNumber + "\n\t\t" + line);
+            }
+        }
+        lineNumber++;
+        if(line.contains(";")){
+            line = line.substring(0,line.indexOf(";"));
+        }
+        line = line.replace(l,"");
+        while(!(line.charAt(0) + "").matches("[\\w]"))
+            line = line.substring(1);
+        return line;
+    }
+
+    /**
+     * Compiles a single line of assembly
+     * @param   line    Line to be compiled
+     * @return          Hex value of inputted command
+     */
     public static String convertLine(String line) {
-
-        StringBuilder outBinary = new StringBuilder("----------------");
-
-
-        log.debug("Line\t\t: " + line);
-        line = line.split(";")[0]; // Disregard Comments
-        while(line.endsWith(" "))
-            line = line.substring(0,line.length()-1);
-        log.debug("Line for parsing\t: " + line);
+        lineNumber++;
         if(line.equals(""))
             return "";
-        log.debug("Command\t\t: \"" + line.split(" ")[0] + "\"");
+        log.debug("\b----------------------------------------|-|");
+        char[] outBinary = {'-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-'};
+        line = line.split(";")[0]; // Disregard Comments
+        log.debug("Line "+lineNumber+"\t: " + line);
 
         if(Command.contains(line.split(" ")[0])){
             Command com = Command.valueOf(line.split(" ")[0]);
-            if(line.matches(com.regex)){
+            if(line.matches(com.regex+"[\\s]*")){
                 String[] parts = line.split("[ ]|"+ spaRegEx);
+                int bitCounter = 11;
+                String[] syntax = com.syntax.split(" ");
+                int regCounter = 1;
 
                 log.debug("Line split into: " + Arrays.toString(parts));
-                for(int bit=15;bit>=12;bit--)
-                    outBinary.setCharAt(bit,com.firstFour.charAt(15-bit));
-
-                    String[] syntax = com.syntax.split(" ");
-                    int bitCounter = 11;
-                    int regCounter = 1;
-                    for(String s: syntax){
-                        if(s.contains("R") && parts[regCounter].contains("R")){
-                            int r = Integer.parseInt(parts[regCounter++].substring(1));
-                            String bits = Numbers.decToBin(r,3);
-                            for(int bit=bitCounter;bit>bitCounter-3;bit--){
-                                log.debug("Setting bit " + bit + " with value in bits[" + (bitCounter-bit) + "]");
-                                outBinary.setCharAt(bit,bits.charAt(bitCounter-bit));
-                            }
-                            bitCounter -= 3;
-                        } else {
-                                for(char c: s.toCharArray()) {
-                                if(c == '0' || c == '1')
-                                    outBinary.setCharAt(bitCounter--,c);
-                                else
-                                    bitCounter--;
-                            }
-                        }
-                    }
-
-                //AND & ADD have 2 variants, check which is applicable
-                if(parts[0].equals("AND") || parts[0].equals("ADD")){
-                    if(parts[3].matches(immRegEx)){
-                        log.debug("Command contains an immediate value!");
-                        // Has Immediate Value
-                        outBinary.setCharAt(5,'1');
-                        String binary = "";
-                        log.debug("Immediate value is " + parts[3]);
-                        if(parts[3].matches(hexRegEx)){
-                            binary = Numbers.hexToBin(parts[3],5);
-                        } else if (parts[3].matches(decRegEx)){
-                            binary = Numbers.decToBin(Integer.parseInt(parts[3].substring(1)),5);
-                        } else {
-                            log.debug("Invalid immediate value given!");
-                        }
-                        for(int bit=4; bit>=0; bit--)
-                            outBinary.setCharAt(4-bit,binary.charAt(bit));
-                    }
-                    else{
-                        log.debug("Command does not contain an immediate value!");
-                        // Has Register Value
-                        outBinary.setCharAt(5,'0');
-                        outBinary.setCharAt(4,'0');
-                        outBinary.setCharAt(3,'0');
-                    }
-                } else {
-
+                for(int bit=15;bit>=12;bit--){
+                    log.debug("Setting bit " + bit + " with value " + com.firstFour.charAt(15-bit) + " from command code");
+                    outBinary[bit] = com.firstFour.charAt(15-bit);
                 }
+
+
+
+                for(String s: syntax){
+                    if(bitCounter == 5 && (parts[0].equals("AND") || parts[0].equals("ADD"))){
+                        if(parts[3].matches(immRegEx5)){
+                            // Has Immediate Value
+                            outBinary[5] = '1';
+                            log.debug("Setting bit 5 with value 1");
+                            String binary = "";
+                            if(parts[3].matches(hexRegEx5)){
+                                binary = Numbers.hexToBin(parts[3],5);
+                            } else if (parts[3].matches(decRegEx5)){
+                                binary = Numbers.decToBin(Integer.parseInt(parts[3].substring(1)),5);
+                            } else {
+                                log.debug("Invalid immediate value given!");
+                            }
+                            for(int bit=4; bit>=0; bit--){
+                                log.debug("Setting bit " + bit + " with value " + binary.charAt(bit) + " from immediate value");
+                                outBinary[4-bit] = binary.charAt(bit);
+                            }
+                        }
+                        else{
+                            // Has Register Value
+                            outBinary[5]='0';
+                            log.debug("Setting bit 5 with value 0");
+                            outBinary[4]='0';
+                            log.debug("Setting bit 4 with value 0");
+                            outBinary[3]='0';
+                            log.debug("Setting bit 3 with value 0");
+                        }
+                    }
+                    else if(bitCounter == 7 && parts[0].equals("TRAP")){
+                        if(parts[1].matches(immRegEx8)){
+                            String binary = "";
+                            if(parts[1].matches(hexRegEx8))
+                                binary = Numbers.hexToBin(parts[1],8);
+                            else if(parts[1].matches(decRegEx8))
+                                binary = Numbers.decToBin(Integer.parseInt(parts[1].substring(1)),8);
+                            else {
+                                String error = "\tInvalid 8-bit Immediate Value on line "+lineNumber+"! \n\t\t"+line+"\n\t\t";
+                                error += "      ^ INVALID VALUE!";
+                                errors.add(error);
+                                log.debug(error);
+                            }
+                            for(int bit=7;bit>=0;bit--){
+                                log.debug("Setting bit " + bit + " with value " + binary.charAt(bit) + " from immediate value");
+                                outBinary[7-bit] = binary.charAt(bit);
+                            }
+                        } else {
+                            String error = "\tInvalid 8-bit Immediate Value on line "+lineNumber+"! \n\t\t"+line+"\n\t\t";
+                            error += "      ^ INVALID VALUE!";
+                            errors.add(error);
+                            log.debug(error);
+                        }
+                    }
+                    if (s.contains("X") && parts[regCounter].contains("*")){
+                        int lineDif = labels.get(parts[regCounter++]) - lineNumber;
+                        log.debug("Line Difference = " + lineDif);
+                        String bits = Numbers.decToBin(lineDif,s.length()); // TODO: Add negative binary number conversion
+                        log.debug(bits);
+                        for(int bit=bitCounter;bit>bitCounter-s.length();bit--){
+                            log.debug("Setting bit " + bit + " with value " + bits.charAt(bitCounter-bit) + " from Label "+ parts[regCounter-1]);
+                            outBinary[bit] = bits.charAt(bitCounter-bit);
+                        }
+                    }
+                    else if (s.contains("X") && parts[regCounter].contains("$")){
+                        int lineDif = variables.get(parts[regCounter++]) - lineNumber;
+                        log.debug("Line Difference = " + lineDif);
+                        String bits = Numbers.decToBin(lineDif,s.length()); // TODO: Add negative binary number conversion
+                        log.debug(bits);
+                        for(int bit=bitCounter;bit>bitCounter-s.length();bit--){
+                            log.debug("Setting bit " + bit + " with value " + bits.charAt(bitCounter-bit) + " from Variable "+ parts[regCounter-1]);
+                            outBinary[bit] = bits.charAt(bitCounter-bit);
+                        }
+                    }
+                    if(bitCounter == 5 && (parts[0].equals("LDR") || parts[0].equals("STR"))){
+                        if(parts[regCounter].matches(immRegEx6)){
+                            String bits = "";
+                            if(parts[regCounter].matches(decRegEx6))
+                                bits = Numbers.decToBin(Integer.parseInt(parts[3].substring(1)),6);
+                            else if(parts[regCounter].matches(hexRegEx6))
+                                bits = Numbers.hexToBin(parts[regCounter],6);
+                            else {
+                                String error = "\tInvalid 6-bit Immediate Value on line "+lineNumber+"! \n\t\t"+line;
+                                errors.add(error);
+                                log.debug(error);
+                            }
+                            log.debug(bits);
+                            for(int bit=5;bit>=0;bit--){
+                                log.debug("Setting bit " + bit + " with value " + bits.charAt(bit) + " from immediate value");
+                                outBinary[5-bit] = bits.charAt(bit);
+                            }
+
+                        } else {
+                            String error = "\tInvalid 6-bit Immediate Value on line "+lineNumber+"! \n\t\t"+line;
+                            errors.add(error);
+                            log.debug(error);
+                        }
+                    }
+                    if (s.contains("R") && parts[regCounter].contains("R")){
+                        int r = Integer.parseInt(parts[regCounter++].substring(1));
+                        String bits = Numbers.decToBin(r,3);
+                        for(int bit=bitCounter;bit>bitCounter-3;bit--){
+                            log.debug("Setting bit " + bit + " with value " + bits.charAt(bitCounter-bit) + " from Reg"+(regCounter-2)+"[" + (bitCounter-bit) + "]");
+                            outBinary[bit] = bits.charAt(bitCounter-bit);
+                        }
+                        bitCounter -= 3;
+                    }else {
+                            for(char c: s.toCharArray()) {
+                            if(c == '0' || c == '1'){
+                                log.debug("Setting bit " + bitCounter + " with value " + c + " from command syntax");
+                                outBinary[bitCounter--]=c;
+                            }
+                            else
+                                bitCounter--;
+                        }
+                    }
+                }
+                //AND & ADD have 2 variants, check which is applicable
+
             } else {
                 log.debug("Syntax Error on line "+lineNumber+"!");
+                checkSyntax(line,com);
+                return "";
             }
         } else {
             log.debug("Invalid Command Found on line "+lineNumber+"!");
+            return "";
         }
-        lineNumber++;
         String out = "";
-        for(char c: outBinary.toString().toCharArray()){
+        for(char c: outBinary){
             out = c + out;
+            if(c == '-'){
+                String error = "\tError! Compiler missed bits on line " + lineNumber+"\n";
+                error +="\t\t"+line;
+                errors.add(error);
+                log.debug(error);
+                return "";
+            }
         }
         return Numbers.binToHex(out);
+    }
+    /**
+     * Checks the syntax of a line (an error exists), and places it into the errors ArrayList
+     * @param   line    Line to check Syntax on
+     * @param   com     Command to check syntax for
+     */
+    public static void checkSyntax(String line, Command com){
+        // Check for invalid characters
+        char[] cA = line.toCharArray();
+        for(char c: cA){
+            if(!(c+"").matches(valRegEx)){
+                int pos = line.indexOf(c);
+                String error = "Invalid Character on line " + lineNumber + "\n";
+                error += "\t" + line + "\n\t";
+                for(int i=0;i<pos;i++)
+                    error += " ";
+                error += "^ INVALID CHARACTER";
+                log.debug(error);
+                errors.add(error);
+            }
+        }
+        // Check Regexs
+
+        String temp = "";
+        int level = 0;
+        ArrayList<String> regexes = new ArrayList<String>();
+        for(char c: com.regex.toCharArray()){
+            if(c == '('){
+                level++;
+                temp += c;
+            }
+            else if(c == ')'){
+                temp += c;
+                if(--level == 0 && !temp.equals("([\\s]+)") && !temp.equals(spaRegEx)){
+                    regexes.add(temp);
+                    temp="";
+                } else if(temp.equals("([\\s]+)") || temp.equals(spaRegEx)) {
+                    temp="";
+                }
+            }
+            else{
+                temp += c;
+            }
+        }
+        String[] parts = line.split("[\\s]+|"+spaRegEx);
+        int i = 0;
+        temp = "";
+        for(char c: cA){
+            if(temp.matches(regexes.get(i))){
+                log.debug(regexes.get(i++) + " matches " + temp);
+                temp = "";
+            } else {
+                temp += c;
+            }
+        }
+        if(temp != ""){
+            String error = "Syntax Error on line " + lineNumber + "\n";
+            error += "\t"+line+"\n";
+            error += "\t"+parts[i]+" is invalid! Must match " + regexes.get(i);
+            log.debug(error);
+            errors.add(error);
+        }
+
     }
 
 
@@ -227,6 +467,24 @@ public class Assembler{
             outFile = new PrintWriter(oF);
         } catch(Exception e){log.writeError(e);}
         Numbers.init();
+        String secondPasser = "";
+        while(inFile.hasNextLine()){
+            String line = inFile.nextLine();
+            secondPasser += firstPass(line)+"\n";
+        }
+        System.out.println("First Pass Complete!");
+        if(!errors.isEmpty()){
+            System.err.println("Errors Found!");
+            for(String s: errors)
+                System.err.println(s);
+            System.exit(-1);
+        } else
+            System.out.println("\tNo errors found on first pass!");
+        log.debug("Variables found: " + variables.keySet());
+        log.debug("Labels found: " + labels.keySet());
+        try{inFile = new Scanner(secondPasser);}catch(Exception e){log.writeError(e);} //Good Practice be damned
+        lineNumber = 1;
+
         while(inFile.hasNextLine()){
             String line = convertLine(inFile.nextLine());
             if(line.length() > 0){
@@ -234,7 +492,15 @@ public class Assembler{
                 outFile.print(line+" ");
             }
         }
+        System.out.println("Second Pass Complete!");
+        if(!errors.isEmpty()){
+            System.err.println("Errors Found!");
+            for(String s: errors)
+                System.err.println(s);
+            System.exit(-1);
+        } else
+            System.out.println("\tNo errors found on second pass!");
+
         outFile.flush();
-        System.out.println("Assembly Complete! No Errors found!");
     }
 }
