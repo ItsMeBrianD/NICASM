@@ -43,7 +43,7 @@ public class Numbers{
     /**
      * Converts a decimal value to a hexadecimal value
      * @param   decimal     Decimal value to be converted
-     * @return              Hexadecimal value of inpup. Formatted as [x]([0-9]|[A-F])+
+     * @return              Hexadecimal value of input. Formatted as [x]([0-9]|[A-F])+
      */
     public static String decToHex(int decimal){
         String out = "x";
@@ -56,7 +56,6 @@ public class Numbers{
             } else {
                 next = (char)(temp+55);
             }
-            log.debug("Adding " + next);
             out += next;
             decimal %= 16;
         } if(decimal > 0){
@@ -67,18 +66,122 @@ public class Numbers{
             } else {
                 next = (char)(temp+55);
             }
-            log.debug("Adding " + next);
             out += next;
         }
         log.debug("Converted to " + out);
         return out;
     }
     /**
+     * Converts a decimal value to a binary value
+     * @param   decimal     Decimal value to be converted
+     * @return              Binary value of input.
+     */
+    public static String decToBin(int decimal){
+        String out = "";
+        log.debug("Converting " + decimal + " to Binary!");
+        while(decimal > 0){
+            int temp = decimal % 2;
+            out = (char)(temp+48) + out;
+            decimal /= 2;
+        }
+        log.debug("Converted to " + out);
+        return out;
+    }
+    /**
+     * Converts a decimal value to a normalized binary value, truncates left-most values if too long.
+     * @param   decimal     Decimal value to be converted
+     * @param   n           Number of bits in output
+     * @return              Binary value of input.
+     */
+    public static String decToBin(int decimal,int n){
+        String out = "";
+        log.debug("Converting " + decimal + " to Binary!");
+        while(decimal > 0){
+            int r = decimal % 2;
+            out = (char)(r+48) + out;
+            decimal /= 2;
+        }
+        while(out.length() > n){
+            out = out.substring(1);
+        }
+        while(out.length() < n){
+            out = '0' + out;
+        }
+        log.debug("Converted to " + out);
+        return out;
+    }
+
+    /**
+     * Converts a Binary value to a Decimal values
+     * @param   Binary      Binary value to be converted
+     * @return              Decimal value of input
+     */
+     public static int binToDec(String binary){
+         int out = 0;
+         log.debug("Converting " + binary + " to Decimal!");
+         for(char c: binary.toCharArray()){
+             out *= 2;
+             out += (int)(c-48);
+         }
+         log.debug("Converted to " + out);
+         return out;
+     }
+
+     /**
+      * Uses a map of hex -> binary to convert a hexadecimal value to binary
+      * @param  hex     Hexadecimal value to convert
+      * @return         Binary value of input
+      */
+     public static String hexToBin(String hex){
+        String out = "";
+        if(hex.startsWith("x"))
+            hex = hex.substring(1);
+        for(char c: hex.toCharArray())
+            out += hexMap.get(c);
+        return out;
+     }
+     /**
+      * Uses a map of hex -> binary to convert a hexadecimal value to binary
+      * @param  hex     Hexadecimal value to convert
+      * @param  n       Number of bits in output
+      * @return         Normalized binary value of input
+      */
+     public static String hexToBin(String hex,int n){
+        String out = "";
+        if(hex.startsWith("x"))
+            hex = hex.substring(1);
+        for(char c: hex.toCharArray()){
+            out += hexMap.get(c+"");
+        }
+        while(out.length() > n)
+            out = out.substring(1);
+        while(out.length() < n)
+            out = '0' + out;
+        return out;
+     }
+     /**
+      * Uses a map of binary -> hex to convert a binary value to hexadecimal
+      * @param  bin     Binary value to convert
+      * @return         Binary value as hexadecimal
+      */
+     public static String binToHex(String bin){
+        while(bin.length() % 4 != 0)
+            bin = '0' + bin;
+        String out = "";
+        while(bin.length() > 0){
+            log.debug(bin.substring(0,4));
+            out += hexMap.get(bin.substring(0,4)+"");
+            bin = bin.substring(4);
+        }
+        return out;
+     }
+
+    /**
      * Initializes a HashMap<String,String> to contain key-value pairs that convert to/from hex
      * Must be called before hexMap can be used.
      */
     public static void init(){
-        Numbers.log = Logger.getLog("Numbers",Logger.debug);
+        Numbers.log = Logger.getLog("Numbers",false);
         hexMap.put("0000","0");
         hexMap.put("0001","1");
         hexMap.put("0010","2");
@@ -111,5 +214,7 @@ public class Numbers{
         hexMap.put("D","1101");
         hexMap.put("E","1110");
         hexMap.put("F","1111");
+        for(String key: hexMap.keySet())
+            log.debug(key+":"+hexMap.get(key));
     }
 }
