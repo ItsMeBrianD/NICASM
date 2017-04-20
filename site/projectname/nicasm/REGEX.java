@@ -10,7 +10,7 @@ public enum REGEX{
         "SPACE"
     ),
     HEX5 (
-        "([x]([0,1]?([0-9]|[A-F])))",
+        "([x](([0-9]|[A-F])))",
         "HEX5"
     ),
     HEX6 (
