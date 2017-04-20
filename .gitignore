@@ -22,7 +22,6 @@
 hs_err_pid*
 
 # arbitrary filenames
-*.nic
 *.nicp
 
 # eclipse project files

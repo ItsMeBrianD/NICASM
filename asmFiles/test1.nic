@@ -1,0 +1,3 @@
+*LOOP 	ADD R8,R2,R7 ;This is a comment
+		ADD r7,R1,R3
+		RTI R7
