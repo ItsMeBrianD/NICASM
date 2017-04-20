@@ -46,6 +46,18 @@ public class Logger {
 	/**
 	 * Checks log map for pre-existing log, if no log has been created, makes and returns new Logger
 	 * @param	name	Name of log to create or get
+	 * @return			Log with name and debug state set
+	 */
+	public static Logger getLog(String name){
+		if(logs.containsKey(name)){
+			return logs.get(name);
+		} else {
+			return new Logger(name);
+		}
+	}
+	/**
+	 * Checks log map for pre-existing log, if no log has been created, makes and returns new Logger
+	 * @param	name	Name of log to create or get
 	 * @param	format	Time-Stamp format if new log is required
 	 * @param	debug	Debug state if new log is needed
 	 * @return			Log with name and debug state set
@@ -56,6 +68,18 @@ public class Logger {
 		} else {
 			return new Logger(name,format,debug);
 		}
+	}
+	/**
+	 * Returns a string of whitespace, used for formatting text
+	 * @param	v 	Varying string
+	 * @param	l	Target Length
+	 * @return		String of space of l - v.length() length.
+	 */
+	public static String spacer(String v, int l){
+		String out = "";
+		for(int i=0;i<l-v.length();i++)
+			out += " ";
+		return out;
 	}
 
 	/**
@@ -212,7 +236,7 @@ public class Logger {
 			int lineNum = stackTraceElements[2].getLineNumber();
 			if(className.startsWith("site.projectname"))
 				className = className.split("[.]")[className.split("[.]").length-1];
-			printf(timeStamp.format(new Date())+"DEBUG:\t%-35s|-| %s\n",(className+"."+methodName+"():"+lineNum),in);
+			printf(timeStamp.format(new Date())+"DEBUG:\t%-40s|-| %s\n",(className+"."+methodName+"():"+lineNum),in);
 		}
 	}
 	/**
