@@ -31,21 +31,17 @@ public class BetterAssembler
 
 	/**
 	 * Creates a BetterAssembler based on command line (or given) arguments
-	 * 
+	 *
 	 * @param args
 	 *            Arguments used to construct object
 	 */
-	public BetterAssembler(String[] args)
-	{
-		if (args.length != 1 && args.length != 2)
-		{
+	public BetterAssembler(String[] args){
+		if (args.length != 1 && args.length != 2){
 			System.err.println("Requires command line input!");
 			System.err.println("Proper usage : java site.projectname.nicasm.Assembler [-debug] filename ");
 			System.exit(-1);
-		} else if (args.length == 2)
-		{
-			if (!args[0].equals("-debug"))
-			{
+		} else if (args.length == 2){
+			if (!args[0].equals("-debug")){
 				System.err.println("Invalid Syntax!");
 				System.err.println("Proper usage : java site.projectname.nicasm.Assembler [-debug] filename ");
 				System.exit(-1);
@@ -53,10 +49,8 @@ public class BetterAssembler
 			System.out.println("Debugging enabled!");
 			Logger.debugGlobal = true;
 			this.fileName = args[1];
-		} else
-		{
-			if (args[0].equals("-debug") || args[0].equals("-h") || args[0].equals("--help"))
-			{
+		} else{
+			if (args[0].equals("-debug") || args[0].equals("-h") || args[0].equals("--help")){
 				System.err.println("Invalid Syntax!");
 				System.err.println("Proper usage : java site.projectname.nicasm.Assembler [-debug] filename ");
 				System.exit(-1);
@@ -67,8 +61,7 @@ public class BetterAssembler
 		initFiles();
 	}
 
-	private String clean(String line)
-	{
+	private String clean(String line){
 		// Take everything before comments
 		line = line.split(";")[0];
 		// Condense White Space
@@ -82,22 +75,18 @@ public class BetterAssembler
 		return line;
 	}
 
-	private String firstPass(String line) throws SyntaxErrorException
-	{
+	private String firstPass(String line) throws SyntaxErrorException{
 		line = clean(line);
-		if (line.equals(""))
-		{
+		if (line.equals("")){
 			return line;
 		}
 		String out = "";
-		switch (line.charAt(0))
-		{
+		switch (line.charAt(0)){
 		case '$':
 			// Variable
 			if (line.split(" ")[0].matches(REGEX.VARIABLE.toString()))
 				out = parseVariable(line);
-			else
-			{
+			else{
 				throw new SyntaxErrorException(line, REGEX.VARIABLE.toString(), lineNumber, this.log);
 			}
 			break;
@@ -105,8 +94,7 @@ public class BetterAssembler
 			// Label
 			if (line.split(" ")[0].matches(REGEX.LABEL.toString()))
 				out = parseLabel(line);
-			else
-			{
+			else{
 				throw new SyntaxErrorException(line, REGEX.LABEL.toString(), lineNumber, this.log);
 			}
 			break;
@@ -118,8 +106,7 @@ public class BetterAssembler
 		return out;
 	}
 
-	private String parseVariable(String line)
-	{
+	private String parseVariable(String line){
 		log.debug("Parsing variable on line " + lineNumber);
 		String v = "|-" + lineNumber + ":";
 		log.debug(v + Logger.spacer(v, 9) + line);
@@ -129,8 +116,7 @@ public class BetterAssembler
 		return out;
 	}
 
-	private String parseLabel(String line)
-	{
+	private String parseLabel(String line){
 		log.debug("Parsing label on line " + lineNumber);
 		String v = "|-" + lineNumber + ":";
 		log.debug(v + Logger.spacer(v, 9) + line);
@@ -144,8 +130,7 @@ public class BetterAssembler
 		return out;
 	}
 
-	private String secondPass(final String line) throws SyntaxErrorException
-	{
+	private String secondPass(final String line) throws SyntaxErrorException{
 		if (line.equals(""))
 			return "";
 		log.debug("");
@@ -155,18 +140,15 @@ public class BetterAssembler
 		log.debug(line, 1);
 		char[] out = { '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-' };
 		String[] parts = line.replaceAll("([\\s]+)|" + REGEX.SPACE, " ").split(" ");
-		ret: if (Command.contains(parts[0]))
-		{
+		ret: if (Command.contains(parts[0])){
 			Command com = Command.get(parts[0]);
 			bC = 15;
 			int rC = 1;
-			if (line.matches(com.regex))
-			{
+			if (line.matches(com.regex)){
 				log.debug("Adding Command ID");
 				out = fillBits(com.firstFour, out);
 				// Commands that must be handled entirely differently go here
-				switch (com)
-				{
+				switch (com){
 				case FILL:
 					out = fillBits(convertImm(parts[1], 16, line), out);
 					break ret;
@@ -174,15 +156,12 @@ public class BetterAssembler
 
 					int value = Integer
 							.parseInt(Numbers.convert(2, 10, false, convertImm(parts[1], 16, line), 16).substring(1));
-					for (int i = value - 1; i >= 0; i--)
-					{
-						if (i == 0)
-						{
+					for (int i = value - 1; i >= 0; i--){
+						if (i == 0){
 							log.debug("BLK done Recursing");
 							log.unindent();
 							return secondPass(".FILL x0000");
-						} else
-						{
+						} else{
 							log.debug("BLK Recursing");
 							log.unindent();
 							return secondPass(".FILL x0000") + " " + secondPass(".BLK #" + i);
@@ -191,11 +170,9 @@ public class BetterAssembler
 
 				case BR: // Can appear in 8 forms
 					parts[0] = parts[0].toUpperCase();
-					if (parts[0].length() == 2)
-					{
+					if (parts[0].length() == 2){
 						out = fillBits("111", out);
-					} else
-					{
+					} else{
 						if (parts[0].contains("N"))
 							out = fillBits("1", out);
 						else
@@ -216,58 +193,46 @@ public class BetterAssembler
 					break;
 				}
 				String[] syntax = com.syntax.split(" ");
-				for (String s : syntax)
-				{
-					if (s.contains("R"))
-					{
+				for (String s : syntax){
+					if (s.contains("R")){
 						log.debug("Adding Register[" + rC + "] (" + parts[rC] + ")");
 						out = fillBits(convertReg(parts[rC++]), out);
-					} else if (s.contains("X"))
-					{
-						if (parts[rC].contains("*") || parts[rC].contains("$"))
-						{
+					} else if (s.contains("X")){
+						if (parts[rC].contains("*") || parts[rC].contains("$")){
 							out = fillBits(compOffset(parts[rC++], s.length(), line), out);
-						} else if (parts[rC].contains("#") || parts[rC].contains("x"))
-						{
+						} else if (parts[rC].contains("#") || parts[rC].contains("x")){
 							if (!(com.value.equals("AND") || com.value.equals("ADD")))
 								out = fillBits(convertImm(parts[rC++], s.length(), line), out);
 						}
-					} else
-					{
+					} else{
 						out = fillBits(s, out);
 					}
 				}
-				switch (com)
-				{
+				switch (com){
 				case ADD:
 				case AND: // Can have either a register or an immediate value
-					if (parts[3].matches(REGEX.IMM5.toString()))
-					{
+					if (parts[3].matches(REGEX.IMM5.toString())){
 						log.debug("Adding immediate|reg marker");
 						out = fillBits("1", out);
 						out = fillBits(convertImm(parts[3], 5, line), out);
-					} else if (parts[3].matches(REGEX.REGISTER.toString()))
-					{
+					} else if (parts[3].matches(REGEX.REGISTER.toString())){
 						log.debug("Adding immediate|reg marker");
 						out = fillBits("0", out);
 						log.debug("Adding buffer");
 						out = fillBits("00", out);
 						log.debug("Adding Register[" + rC + "] (" + parts[rC] + ")");
 						out = fillBits(convertReg(parts[3]), out);
-					} else
-					{
+					} else{
 						// log.unindent();
 						throw new SyntaxErrorException(clean(line), com.regex, lineNumber, log);
 					}
 					break ret;
 				}
-			} else
-			{
+			} else{
 				// log.unindent();
 				throw new SyntaxErrorException(clean(line), com.regex, lineNumber, log);
 			}
-		} else
-		{
+		} else{
 			// log.unindent();
 			throw new SyntaxErrorException("Invalid command on line " + lineNumber + "\n\t" + line, log);
 		}
@@ -286,18 +251,14 @@ public class BetterAssembler
 		return realOut;
 	}
 
-	private String compOffset(String in, int n, String line) throws SyntaxErrorException
-	{
+	private String compOffset(String in, int n, String line) throws SyntaxErrorException{
 		int offSet = 0;
 		int address = 0;
-		if (in.startsWith("*"))
-		{
+		if (in.startsWith("*")){
 			address = labels.get(in) - 1;
-		} else if (in.startsWith("$"))
-		{
+		} else if (in.startsWith("$")){
 			address = variables.get(in);
-		} else
-		{
+		} else{
 			throw new SyntaxErrorException("Invalid Label on line " + lineNumber + "\n\t" + line, log);
 		}
 		offSet += address - lineNumber;
@@ -305,8 +266,7 @@ public class BetterAssembler
 		return Numbers.convert(10, 2, true, offSet + "", n);
 	}
 
-	private String convertImm(String in, int len, String line) throws SyntaxErrorException
-	{
+	private String convertImm(String in, int len, String line) throws SyntaxErrorException{
 		if (!(in.startsWith("#") || in.startsWith("x")))
 			throw new SyntaxErrorException("Invalid Immediate Value on " + lineNumber + "\n\t" + line, log);
 		if (in.startsWith("#"))
@@ -316,23 +276,19 @@ public class BetterAssembler
 		return "";
 	}
 
-	private String convertReg(String in) throws SyntaxErrorException
-	{
+	private String convertReg(String in) throws SyntaxErrorException{
 		in = in.substring(1);
 		return Numbers.convert(10, 2, false, in, 3);
 	}
 
-	private char[] fillBits(String bits, char[] in)
-	{
+	private char[] fillBits(String bits, char[] in){
 		if (bits.replace("X", "").equals(""))
 			return in;
 		int start = bC;
 		int end = start - bits.length();
 		log.debug("Filling bits [" + start + ":" + (end + 1) + "] with " + bits);
-		for (int i = start; i > end; i--)
-		{
-			if (bits.charAt(start - i) != 'X')
-			{
+		for (int i = start; i > end; i--){
+			if (bits.charAt(start - i) != 'X'){
 				in[15 - i] = bits.charAt(start - i);
 				bC--;
 			}
@@ -342,47 +298,38 @@ public class BetterAssembler
 		return in;
 	}
 
-	private boolean checkErrors()
-	{
-		if (!errors.isEmpty())
-		{
+	private boolean checkErrors(){
+		if (!errors.isEmpty()){
 			System.err.println(errors.size() + " Error(s) found:");
-			for (String s : errors)
-			{
+			for (String s : errors){
 				System.err.println(s);
 				for (String s2 : s.split("\n"))
 					log.write(s2);
 			}
 			return true;
-		} else
-		{
+		} else{
 			System.out.println("\t No Errors found.");
 			return false;
 		}
 	}
 
-	private void initFiles()
-	{
+	private void initFiles(){
 		File iF = null;
 		File oF = null;
-		try
-		{
+		try{
 			iF = new File(fileName);
 			inFile = new Scanner(iF);
-		} catch (Exception e)
-		{
+		} catch (Exception e){
 			log.writeError(e);
 			System.err.println("File not Found!");
 			log.debug("Absolute filepath for argument: ");
 			log.debug(iF.getAbsolutePath());
 			System.exit(-1);
 		}
-		try
-		{
+		try{
 			oF = new File(fileName.split("[.]")[0] + ".nicp");
 			outFile = new PrintWriter(oF);
-		} catch (Exception e)
-		{
+		} catch (Exception e){
 			log.writeError(e);
 			System.err.println("Error creating output file!");
 			log.debug("Attempting to output to :");
@@ -393,28 +340,23 @@ public class BetterAssembler
 
 	/**
 	 * Assembles a file from Assembly to Hex.
-	 * 
+	 *
 	 * @param file
 	 *            File to be assembled
 	 */
-	public void assemble(String file)
-	{
+	public void assemble(String file){
 		this.log = Logger.getLog("Assembler", Logger.debugGlobal);
 		this.log.write("Assembling file " + fileName);
-		if (!fileName.endsWith(".nic"))
-		{
+		if (!fileName.endsWith(".nic")){
 			log.debug("Warning: Files should end with '.nic'!");
 		}
 		initFiles();
 
 		String s = "";
-		while (inFile.hasNextLine())
-		{
-			try
-			{
+		while (inFile.hasNextLine()){
+			try{
 				s += firstPass(inFile.nextLine()) + "\n";
-			} catch (SyntaxErrorException e)
-			{
+			} catch (SyntaxErrorException e){
 				errors.add(e.getMessage());
 			}
 			lineNumber++;
@@ -426,28 +368,22 @@ public class BetterAssembler
 		log.debug("Variables found: " + variables.keySet());
 		log.debug("Labels found: " + labels.keySet());
 
-		try
-		{
+		try{
 			inFile = new Scanner(s);
-		} catch (Exception e)
-		{
+		} catch (Exception e){
 		}
 		lineNumber = 1;
 
-		while (inFile.hasNextLine())
-		{
-			try
-			{
+		while (inFile.hasNextLine()){
+			try{
 				String l = inFile.nextLine();
 
 				String line = secondPass(l);
 
-				if (line.length() > 0)
-				{
+				if (line.length() > 0){
 					outFile.print(line + " ");
 				}
-			} catch (SyntaxErrorException e)
-			{
+			} catch (SyntaxErrorException e){
 				errors.add(e.getMessage());
 			}
 			lineNumber++;
@@ -459,8 +395,7 @@ public class BetterAssembler
 		outFile.close();
 	}
 
-	public static void main(String[] args)
-	{
+	public static void main(String[] args){
 		BetterAssembler a = new BetterAssembler(new String[] { "-debug", "test1.nic" });
 		a.assemble("test1.nic");
 		a = new BetterAssembler(new String[] { "-debug", "test2.nic" });
