@@ -61,14 +61,18 @@ public enum REGEX{
         "IMM16",
         "(HEX16|DEC16)"
     ),
+	CHAR(
+		"['][ -~][']",
+		"CHAR"
+	),
     LABEL(
         "([*][A-Z]+)([\\s]*)",
         "LABEL"
     ),
     FILL (
-        "([\\.]FILL[\\s]+)" + IMM16,
+        "([\\.]FILL[\\s]+)(" + IMM16 + "|" + CHAR + ")",
         "FILL",
-        ".FILL IMM16"
+        ".FILL (IMM16|CHAR)"
     ),
     BLK  (
         "([\\.]BLK[\\s]+)" + IMM8,
