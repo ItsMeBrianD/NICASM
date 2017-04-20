@@ -24,7 +24,7 @@ public class Logger {
 	private PrintWriter writer;
 	private Logger(){} 		//Prevents instantizing
 	public static boolean debugGlobal = false;
-	private boolean debug = false;
+	public boolean debug = false;
 	public int indentLevel = 0;
 	/**
 	 * Map of all currently running logs.
@@ -38,7 +38,7 @@ public class Logger {
 	 * @return			Log with name and debug state set
 	 */
 	public static Logger getLog(String name, boolean debug){
-		if(logs.containsKey(name)){
+		if(logs.containsKey(name) && logs.get(name).debug == debug){
 			return logs.get(name);
 		} else {
 			return new Logger(name,debug);

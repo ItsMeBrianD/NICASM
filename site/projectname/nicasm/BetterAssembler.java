@@ -285,7 +285,7 @@ public class BetterAssembler{
         log.debug("");
         return in;
     }
-    private void checkErrors(){
+    private boolean checkErrors(){
         if(!errors.isEmpty()){
             System.err.println(errors.size() + " Error(s) found:");
             for(String s: errors){
@@ -293,9 +293,10 @@ public class BetterAssembler{
                 for(String s2: s.split("\n"))
                     log.write(s2);
             }
-            System.exit(-1);
+            return true;
         } else {
             System.out.println("\t No Errors found.");
+            return false;
         }
     }
     private void initFiles(){
@@ -346,7 +347,8 @@ public class BetterAssembler{
         }
 
         System.out.println("First Pass Complete.");
-        checkErrors();
+        if(checkErrors())
+          return;
         log.debug("Variables found: "+ variables.keySet());
         log.debug("Labels found: "+ labels.keySet());
 
@@ -370,14 +372,22 @@ public class BetterAssembler{
             lineNumber++;
         }
         System.out.println("Second Pass Complete.");
-        checkErrors();
+        if(checkErrors())
+          return;
 
         outFile.close();
     }
 
     public static void main(String[] args){
-        BetterAssembler a = new BetterAssembler(args);
-        a.assemble(a.fileName);
+        BetterAssembler a = new BetterAssembler(new String[]{"-debug","test1.nic"});
+        a.assemble("test1.nic");
+        a = new BetterAssembler(new String[]{"-debug","test2.nic"});
+        a.assemble("test2.nic");
+
+        BetterAssembler b = new BetterAssembler(new String[]{"test1.nic"});
+        b.assemble("test1.nic");
+        b = new BetterAssembler(new String[]{"test2.nic"});
+        b.assemble("test2.nic");
     }
 
 }
