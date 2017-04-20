@@ -121,9 +121,11 @@ public class BetterAssembler{
                         for(int i=value-1;i>=0;i--){
                             if(i == 0){
                                 log.debug("BLK done Recursing");
+                                log.unindent();
                                 return secondPass(".FILL x0000");
                             } else {
                                 log.debug("BLK Recursing");
+                                log.unindent();
                                 return secondPass(".FILL x0000") + " " +secondPass(".BLK #"+i) + " ";
                             }
                         }
@@ -159,6 +161,7 @@ public class BetterAssembler{
                             out = fillBits("000",out);
                             out = fillBits(convertRegister(parts[3]),out);
                         } else {
+                            //log.unindent();
                             throw new SyntaxErrorException(clean(line),com.regex,lineNumber,log);
                         }
                         break ret;
@@ -177,19 +180,19 @@ public class BetterAssembler{
                     }
                 }
             } else {
-
+                //log.unindent();
                 throw new SyntaxErrorException(clean(line),com.regex,lineNumber,log);
             }
         } else {
-
+            //log.unindent();
             throw new SyntaxErrorException("Invalid command on line " + lineNumber+"\n\t"+line,log);
         }
 
 
         log.debug("Line " + lineNumber + " compiled to ");
         log.debug(new String(out),1);
-        log.indentLevel--;
         return new String(out);
+        log.unindent();
     }
     private static String compOffset(String in, String line, int n) throws SyntaxErrorException {
         int offSet = 1;

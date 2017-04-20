@@ -26,7 +26,6 @@ public class Logger {
 	public static boolean debugGlobal = false;
 	private boolean debug = false;
 	public int indentLevel = 0;
-	private static String tab= "-\t";
 	/**
 	 * Map of all currently running logs.
 	 */
@@ -231,7 +230,22 @@ public class Logger {
 	 * @param	in 		String to print
 	 */
 	public void debug(String in){
-		debug(in,0);
+		if(this.debug){
+			StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+			String className = stackTraceElements[2].getClassName();
+			String methodName = stackTraceElements[2].getMethodName();
+			int lineNum = stackTraceElements[2].getLineNumber();
+			if(className.startsWith("site.projectname"))
+				className = className.split("[.]")[className.split("[.]").length-1];
+			String indent = "-";
+			for(int i=0;i<indentLevel;i++)
+				indent+="-";
+			for(int i=0;i<=indentLevel;i++)
+			indent=indent+Logger.spacer(indent,4*(indentLevel) + 4);
+			//indent+="\t";
+
+			printf(timeStamp.format(new Date())+"DEBUG:\t%-40s|-|%s%s\n",(className+"."+methodName+"():"+lineNum),indent,in);
+		}
 	}
 	public void debug(String in,int indentMod){
 		if(this.debug){
@@ -241,12 +255,20 @@ public class Logger {
 			int lineNum = stackTraceElements[2].getLineNumber();
 			if(className.startsWith("site.projectname"))
 				className = className.split("[.]")[className.split("[.]").length-1];
-			String indent = "|-";
+			String indent = "-";
 			for(int i=0;i<indentLevel+indentMod;i++)
-				indent+=tab;
-			indent+="\t";
-			printf(timeStamp.format(new Date())+"DEBUG:\t%-40s|-| %s%s\n",(className+"."+methodName+"():"+lineNum),indent,in);
+				indent+="-";
+			indent=indent+Logger.spacer(indent,4*(indentLevel+indentMod) + 4);
+			//indent+="\t";
+
+			printf(timeStamp.format(new Date())+"DEBUG:\t%-40s|-|%s%s\n",(className+"."+methodName+"():"+lineNum),indent,in);
 		}
+	}
+	public void indent(){
+		this.indentLevel++;
+	}
+	public void unindent(){
+		this.indentLevel--;
 	}
 	/**
 	 * Used for verbose output, writes spacer if debug is enabled

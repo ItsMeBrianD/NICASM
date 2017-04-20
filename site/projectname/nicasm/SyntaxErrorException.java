@@ -7,26 +7,30 @@ public class SyntaxErrorException extends Exception {
     private String message;
     public SyntaxErrorException(String line, REGEX regex, int lineNumber, Logger log){
         log.debug("SyntaxErrorException -->");
-        log.debug("| Generating syntax error message for");
-        log.debug("|-\t"+line);
-        log.debug("| Based on");
-        log.debug("|-\t"+regex.getName()+"="+regex.getRecipie());
+        log.indent();
+        log.debug("Generating syntax error message for");
+        log.debug(line,1);
+        log.debug("Based on");
+        log.debug(regex.getName()+"="+regex.getRecipie(),1);
         String[] regexs = extractRegex(regex,log);
         String message = createMessage(line,regexs,lineNumber,log);
         this.message = message;
     }
     public SyntaxErrorException(String line, String regex, int lineNumber, Logger log){
         log.debug("SyntaxErrorException -->");
-        log.debug("| Generating syntax error message for");
-        log.debug("|-\t"+line);
-        log.debug("| Based on");
-        log.debug("|-\t"+regex);
+        log.indent();
+        log.debug("Generating syntax error message for");
+        log.debug(line,1);
+        log.debug("Based on");
+        log.debug(regex,1);
         String[] regexs = extractRegex(regex,log);
         String message = createMessage(line,regexs,lineNumber,log);
         this.message = message;
+        log.unindent();
+        log.unindent();
     }
     private String[] extractRegex(String regex, Logger log){
-        log.debug("| Splitting " + regex);
+        log.debug("Splitting " + regex);
         int level = 0;
         String temp = "";
         String[] out = new String[0];
@@ -40,12 +44,12 @@ public class SyntaxErrorException extends Exception {
                 level --;
                 if(level == 0){
                     if(temp.equals("[\\s]+")||temp.equals("[\\s]*")||temp.equals("[,][ ]*")){
-                        log.debug("|-\t Skipping whitespace token");
+                        log.debug("Skipping whitespace token",1);
                         temp = "";
                     } else {
                         // Add regex to output
-                        log.debug("|-\tCurrent out.length : " + out.length);
-                        log.debug("|-\tAdding String : " + temp);
+                        log.debug("Current out.length : " + out.length,1);
+                        log.debug("Adding String : " + temp,1);
                         // Scale output array by + 1
                         String[] tempA = new String[out.length+1];
                         // Copy existing data
@@ -55,11 +59,11 @@ public class SyntaxErrorException extends Exception {
                         tempA[out.length] = temp;
                         temp = "";
                         out = tempA;
-                        log.debug("|-\tUpdated out.length : " + out.length);
-                        log.debug("|-\tout :\t" + out[0]);
+                        log.debug("Updated out.length : " + out.length,1);
+                        log.debug("out :\t" + out[0],1);
                         for(int i=1;i<out.length;i++)
-                            log.debug("|-\t\t" + out[i]);
-                        log.debug("|-\t");
+                            log.debug(out[i],2);
+                        log.debug("",1);
                     }
                 } else
                     temp += c;
@@ -78,8 +82,8 @@ public class SyntaxErrorException extends Exception {
         String message = "";
         message += "Syntax error on line " + lineNumber +".\n\t";
         message += line+"\n\t";
-        log.debug("| Checking Input");
-        log.debug("|-\tTokens:"+Arrays.toString(line.replace(","," ").replaceAll("[\\s]+"," ").split(" ")));
+        log.debug("Checking Input");
+        log.debug("Tokens:"+Arrays.toString(line.replace(","," ").replaceAll("[\\s]+"," ").split(" ")),1);
         String[] parts = line.replace(","," ").replaceAll("[\\s]+"," ").split(" ");
         if(parts.length < regexs.length){
             for(int i=regexs.length-parts.length;i>0;i--)
@@ -93,8 +97,8 @@ public class SyntaxErrorException extends Exception {
             return message;
         }
         for(String s: parts){
-            log.debug("|-\tAdding " + s.length() + " to spaceCounter");
-            log.debug("|-\tToken: " + s);
+            log.debug("Adding " + s.length() + " to spaceCounter",1);
+            log.debug("\tToken: " + s,1);
             if(!s.matches(regexs[regexsIndex])){
                 log.debug("|-\t Error <<<<<<<");
                 // Error has been located!
@@ -109,7 +113,7 @@ public class SyntaxErrorException extends Exception {
             } else {
                 // temp matches, continue
                 spaceCounter += s.length() + 1;
-                log.debug("|-\t"+s+" matches "+regexs[regexsIndex]);
+                log.debug(s+" matches "+regexs[regexsIndex],1);
                 regexsIndex++;
             }
         }
