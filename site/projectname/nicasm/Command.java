@@ -5,7 +5,7 @@ import static site.projectname.nicasm.REGEX.*;
 public enum Command {
     ADD ("ADD",  "(ADD)([\\s]+)" +REGISTER+SPACE+REGISTER+SPACE+"("+REGISTER+"|"+IMM5+")",  "0001", "DR SR1 XXXXXX "),
     AND ("AND",  "(AND)([\\s]+)" +REGISTER+SPACE+REGISTER+SPACE+"("+REGISTER+"|"+IMM5+")",  "0101", "DR SR1 XXXXXX "),
-    BR  ("BR",   "((BR)[Zz]?[Nn]?[Pp]?)([\\s]+)"+LABEL,                                     "0000", "XXX XXXXXXXXX  "),
+    BR  ("BR",   "((BR)[Nn]?[Zz]?[Pp]?)([\\s]+)"+LABEL,                                     "0000", "XXX XXXXXXXXX  "),
     JMP ("JMP",  "(JMP)([\\s]+)" +REGISTER,                                                 "1100", "000 BR 000000  "),
     JSR ("JSR",  "(JSR)([\\s]+)" +LABEL,                                                    "0100", "1 XXXXXXXXXXX  "),
     JSRR("JSRR", "(JSRR)([\\s]+)"+REGISTER,                                                 "0100", "000 BR 000000  "),
