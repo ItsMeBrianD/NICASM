@@ -22,10 +22,14 @@ public class BetterAssembler{
     private static ArrayList<String> errors = new ArrayList<String>();
 
     private static int lineNumber = 1;
+    private static int bC = 15;
 
     private static String clean(String line){
         // Take everything before comments
         line = line.split(";")[0];
+        // Condense White Space
+        line = line.replaceAll("[\\s\\t]+"," ");
+
         // Remove extra whitespace
         while(line.startsWith(" "))
             line = line.substring(1);
@@ -36,27 +40,34 @@ public class BetterAssembler{
 
     private static String firstPass(String line) throws SyntaxErrorException {
         line = clean(line);
+        if(line.equals("")){
+
+            return line;
+        }
         String out = "";
         switch(line.charAt(0)){
             case '$':
                 // Variable
-                if(line.matches(REGEX.VARIABLE.toString()))
+                if(line.split(" ")[0].matches(REGEX.VARIABLE.toString()))
                     out = parseVariable(line);
-                else
+                else{
                     throw new SyntaxErrorException(line,REGEX.VARIABLE,lineNumber,BetterAssembler.log);
+                }
                 break;
             case '*':
                 // Label
                 if(line.split(" ")[0].matches(REGEX.LABEL.toString()))
                     out = parseLabel(line);
-                else
+                else{
+
                     throw new SyntaxErrorException(line,REGEX.LABEL,lineNumber,BetterAssembler.log);
+                }
                 break;
             default:
                 out = line;
                 break;
         }
-        lineNumber++;
+
         return out;
     }
 
@@ -88,77 +99,117 @@ public class BetterAssembler{
         if(line.equals(""))
             return "";
         log.debug("");
-        log.debug("Parsing line " + lineNumber);
-        log.debug("|-\t"+line);
+        log.debug("Parsing line " + lineNumber);log.indentLevel++;
+        log.debug("Contents:");
+        log.debug(line,1);
         char[] out = {'-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-'};
         String[] parts = line.replaceAll("([\\s]+)|"+REGEX.SPACE," ").split(" ");
-        log.debug("|-\t"+Arrays.toString(parts));
-        if(Command.contains(parts[0])){
+        ret: if(Command.contains(parts[0])){
             Command com = Command.get(parts[0]);
-            switch(com){
-                case BR:
-                    if(parts[0].length() == 2){
-                        out = fillBits(11,8,"111",out);
-                    } else {
-                        if(parts[0].contains("N"))
-                            out = fillBits(11,10,"1",out);
-                        else
-                            out = fillBits(11,10,"0",out);
-                        if(parts[0].contains("Z"))
-                            out = fillBits(10,9,"1",out);
-                        else
-                            out = fillBits(10,9,"0",out);
-                        if(parts[0].contains("P"))
-                            out = fillBits(9,8,"1",out);
-                        else
-                            out = fillBits(9,8,"0",out);
-                    }
-                    out = fillBits(8,0,compOffset(parts[1]),out);
-                    break;
-
-                default:
-                    break;
-            }
-            int bC = 15;
+            bC = 15;
             int rC = 1;
             if(line.matches(com.regex)){
-                out = fillBits(bC,bC-4,com.firstFour,out);
-                bC -= 4;
+                out = fillBits(com.firstFour,out);
+                // Special case commands go here
+                switch(com){
+                    case FILL:
+                        out = fillBits(convertImm(parts[1],16,line),out);
+                        break ret;
+                    case BLK:
+
+                        int value = Integer.parseInt(Numbers.convert(2,10,false,convertImm(parts[1],16,line),16).substring(1));
+                        for(int i=value-1;i>=0;i--){
+                            if(i == 0){
+                                log.debug("BLK done Recursing");
+                                return secondPass(".FILL x0000");
+                            } else {
+                                log.debug("BLK Recursing");
+                                return secondPass(".FILL x0000") + " " +secondPass(".BLK #"+i) + " ";
+                            }
+                        }
+
+                    case BR: // Can appear in 8 forms
+                        parts[0] = parts[0].toUpperCase();
+                        if(parts[0].length() == 2){
+                            out = fillBits("111",out);
+                        } else {
+                            if(parts[0].contains("N"))
+                                out = fillBits("1",out);
+                            else
+                                out = fillBits("0",out);
+                            if(parts[0].contains("Z"))
+                                out = fillBits("1",out);
+                            else
+                                out = fillBits("0",out);
+                            if(parts[0].contains("P"))
+                                out = fillBits("1",out);
+                            else
+                                out = fillBits("0",out);
+                        }
+                        out = fillBits(compOffset(parts[1],line,9),out);
+
+                        break ret;
+                    case ADD: case AND: // Can have either a register or an immediate value
+                        out = fillBits(convertRegister(parts[1]),out);
+                        out = fillBits(convertRegister(parts[2]),out);
+                        if(parts[3].matches(REGEX.IMM5.toString())){
+                            out = fillBits("1",out);
+                            out = fillBits(convertImm(parts[3],5,line),out);
+                        } else if(parts[3].matches(REGEX.REGISTER.toString())){
+                            out = fillBits("000",out);
+                            out = fillBits(convertRegister(parts[3]),out);
+                        } else {
+                            throw new SyntaxErrorException(clean(line),com.regex,lineNumber,log);
+                        }
+                        break ret;
+                    default:
+                        break;
+                }
                 String[] syntax = com.syntax.split(" ");
                 for(String s: syntax){
                     if(s.contains("R")){
-                        log.debug("|-\tAdding Register["+ rC +"]!");
-                        out = fillBits(bC,bC-3,convertRegister(parts[rC++]),out);
-                        bC -= 3;
+                        log.debug("Adding Register["+ rC +"]");
+                        out = fillBits(convertRegister(parts[rC++]),out);
                     } else if(s.contains("X")){
                         if(parts[rC].contains("*") || parts[rC].contains("$")){
-                            out = fillBits(bC,bC-parts[rC].length(),convertImm(parts[rC++],s.length(),line),out);
+                            out = fillBits(compOffset(parts[rC++],line,s.length()),out);
                         }
-                        bC -= s.length();
                     }
                 }
             } else {
-                throw new SyntaxErrorException(line,com.regex,lineNumber,log);
+
+                throw new SyntaxErrorException(clean(line),com.regex,lineNumber,log);
             }
         } else {
+
             throw new SyntaxErrorException("Invalid command on line " + lineNumber+"\n\t"+line,log);
         }
-        log.debug("|-\tLine " + lineNumber + " compiled from ");
-        log.debug("|-\t\t"+line);
-        log.debug("|-\t  TO");
-        log.debug("|-\t\t"+new String(out));
-        log.debug("|-\tOriginal Line:"+lineNumber+": " + line);
-        lineNumber++;
+
+
+        log.debug("Line " + lineNumber + " compiled to ");
+        log.debug(new String(out),1);
+        log.indentLevel--;
         return new String(out);
     }
-    private static String compOffset(String in) throws SyntaxErrorException {
-        int offSet;
+    private static String compOffset(String in, String line, int n) throws SyntaxErrorException {
+        int offSet = 1;
+        int address=0;
+        if(in.startsWith("*")){
+            address = labels.get(in)-lineNumber;
+        } else if(in.startsWith("$")){
+            address = variables.get(in)-lineNumber;
+        } else{
+            throw new SyntaxErrorException("Invalid Label on line "+lineNumber+"\n\t"+line,log);
+        }
+        offSet += address;
+        log.debug("Offset from " + in + "("+address+") is " + offSet + " lines");
+        return Numbers.convert(10,2,true,offSet+"",n);
     }
 
 
     private static String convertImm(String in,int len,String line) throws SyntaxErrorException{
-        if(!in.startsWith("#") || !in.startsWith("x"))
-            throw new SyntaxErrorException("Invalid Immediate Value " + lineNumber+"\n\t"+line,log);
+        if(!(in.startsWith("#") || in.startsWith("x")))
+            throw new SyntaxErrorException("Invalid Immediate Value on " + lineNumber+"\n\t"+line,log);
         if(in.startsWith("#"))
             return Numbers.convert(10,2,false,in,len);
         if(in.startsWith("x"))
@@ -171,14 +222,19 @@ public class BetterAssembler{
         return Numbers.convert(10,2,false,in,3);
     }
 
-    private static char[] fillBits(int start, int end, String bits, char[] in){
-        log.debug("|-\tFilling bits ["+start+":"+end+"] with "+bits);
-        int length = start-end;
+    private static char[] fillBits(String bits, char[] in){
+        if(bits.replace("X","").equals(""))
+            return in;
+        int start = bC;
+        int end = start-bits.length();
+        log.debug("Filling bits ["+start+":"+(end+1)+"] with "+bits);
         for(int i=start;i>end;i--){
-            if(bits.charAt(start-i) != 'X')
+            if(bits.charAt(start-i) != 'X'){
                 in[15-i] = bits.charAt(start-i);
+                bC--;
+            }
         }
-        log.debug("|-\t"+Arrays.toString(in));
+        log.debug(Arrays.toString(in),1);
         return in;
     }
 
@@ -201,6 +257,7 @@ public class BetterAssembler{
             } catch(SyntaxErrorException e){
                 errors.add(e.getMessage());
             }
+            lineNumber++;
         }
 
         System.out.println("First Pass Complete.");
@@ -225,6 +282,7 @@ public class BetterAssembler{
             } catch(SyntaxErrorException e){
                 errors.add(e.getMessage());
             }
+            lineNumber++;
         }
         System.out.println("Second Pass Complete.");
         checkErrors();
