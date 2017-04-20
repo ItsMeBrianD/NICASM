@@ -34,14 +34,13 @@ public class BetterAssembler{
         while(line.startsWith(" "))
             line = line.substring(1);
         while(line.endsWith(" ") || line.endsWith("\n"))
-            line = line.substring(0,line.length()-2);
+            line = line.substring(0,line.length()-1);
         return line;
     }
 
     private static String firstPass(String line) throws SyntaxErrorException {
         line = clean(line);
         if(line.equals("")){
-
             return line;
         }
         String out = "";
@@ -59,7 +58,6 @@ public class BetterAssembler{
                 if(line.split(" ")[0].matches(REGEX.LABEL.toString()))
                     out = parseLabel(line);
                 else{
-
                     throw new SyntaxErrorException(line,REGEX.LABEL,lineNumber,BetterAssembler.log);
                 }
                 break;
@@ -99,7 +97,7 @@ public class BetterAssembler{
         if(line.equals(""))
             return "";
         log.debug("");
-        log.debug("Parsing line " + lineNumber);log.indentLevel++;
+        log.debug("Parsing line " + lineNumber);log.indent();
         log.debug("Contents:");
         log.debug(line,1);
         char[] out = {'-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-'};
@@ -188,11 +186,16 @@ public class BetterAssembler{
             throw new SyntaxErrorException("Invalid command on line " + lineNumber+"\n\t"+line,log);
         }
 
+        String realOut = new String(out);
 
         log.debug("Line " + lineNumber + " compiled to ");
-        log.debug(new String(out),1);
-        return new String(out);
+        log.debug(realOut,1);
         log.unindent();
+
+        if(realOut.contains("-"))
+            throw new SyntaxErrorException("Command on line " + lineNumber +" has unset bits!\n\n"+line,log);
+
+        return realOut;
     }
     private static String compOffset(String in, String line, int n) throws SyntaxErrorException {
         int offSet = 1;
