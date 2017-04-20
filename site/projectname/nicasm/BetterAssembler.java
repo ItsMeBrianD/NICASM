@@ -58,6 +58,10 @@ public class BetterAssembler
 			Logger.debugGlobal = false;
 			this.fileName = args[0];
 		}
+		this.log = Logger.getLog("Assembler", Logger.debugGlobal);
+		log.debug("Given Arguments:");
+		for(String s: args)
+			log.debug(s,1);
 		initFiles();
 	}
 
@@ -92,7 +96,7 @@ public class BetterAssembler
 			break;
 		case '*':
 			// Label
-			if (line.split(" ")[0].matches(REGEX.LABEL.toString()))
+			if(line.split(" ")[0].matches(REGEX.LABEL.toString()))
 				out = parseLabel(line);
 			else{
 				throw new SyntaxErrorException(line, REGEX.LABEL.toString(), lineNumber, this.log);
@@ -102,7 +106,6 @@ public class BetterAssembler
 			out = line;
 			break;
 		}
-
 		return out;
 	}
 
@@ -356,7 +359,6 @@ public class BetterAssembler
 	 *            File to be assembled
 	 */
 	public void assemble(String file){
-		this.log = Logger.getLog("Assembler", Logger.debugGlobal);
 		this.log.write("Assembling file " + fileName);
 		if (!fileName.endsWith(".nic")){
 			log.debug("Warning: Files should end with '.nic'!");
@@ -407,16 +409,8 @@ public class BetterAssembler
 	}
 
 	public static void main(String[] args){
-		BetterAssembler a = new BetterAssembler(new String[] { "-debug", "test1.nic" });
-		a.assemble("test1.nic");
-		a = new BetterAssembler(new String[] { "-debug", "test2.nic" });
-		a.assemble("test2.nic");
-
-		BetterAssembler b = new BetterAssembler(new String[] { "test1.nic" });
-		b.assemble("test1.nic");
-		// b = new BetterAssembler(new String[] { "printTest.nic" });
-		// b.assemble("test2.nic");
-
+		BetterAssembler a = new BetterAssembler(args);
+		a.assemble(a.fileName);
 	}
 
 }
