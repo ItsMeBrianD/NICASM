@@ -25,6 +25,8 @@ public class Logger {
 	private Logger(){} 		//Prevents instantizing
 	public static boolean debugGlobal = false;
 	private boolean debug = false;
+	public int indentLevel = 0;
+	private static String tab= "-\t";
 	/**
 	 * Map of all currently running logs.
 	 */
@@ -229,6 +231,9 @@ public class Logger {
 	 * @param	in 		String to print
 	 */
 	public void debug(String in){
+		debug(in,0);
+	}
+	public void debug(String in,int indentMod){
 		if(this.debug){
 			StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
 			String className = stackTraceElements[2].getClassName();
@@ -236,7 +241,11 @@ public class Logger {
 			int lineNum = stackTraceElements[2].getLineNumber();
 			if(className.startsWith("site.projectname"))
 				className = className.split("[.]")[className.split("[.]").length-1];
-			printf(timeStamp.format(new Date())+"DEBUG:\t%-40s|-| %s\n",(className+"."+methodName+"():"+lineNum),in);
+			String indent = "|-";
+			for(int i=0;i<indentLevel+indentMod;i++)
+				indent+=tab;
+			indent+="\t";
+			printf(timeStamp.format(new Date())+"DEBUG:\t%-40s|-| %s%s\n",(className+"."+methodName+"():"+lineNum),indent,in);
 		}
 	}
 	/**
