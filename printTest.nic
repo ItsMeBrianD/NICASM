@@ -1,0 +1,2 @@
+ADD R1, R1, xF
+RTI R1

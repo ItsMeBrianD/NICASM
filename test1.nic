@@ -1,0 +1,4 @@
+ADD R1, R1, #10
+ADD R1, R1, R1
+ADD R1, R1, #13
+RTI

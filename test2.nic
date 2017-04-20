@@ -1,0 +1,17 @@
+$VARR  .BLK  x05
+$VAR .FILL xFFFF
+
+*START    ADD R0,R0,R1
+          ADD R0,R0,#5
+          ADD R0,R0,xF
+
+          BR      *START
+          BRN     *START
+          BRZ     *START
+          BRP     *START
+          BRNZ    *START
+          BRZP    *START
+          BRNP    *START
+*LABEL
+          JMP     R7
+          RET
