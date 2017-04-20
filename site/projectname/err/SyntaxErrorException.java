@@ -1,21 +1,10 @@
-package site.projectname.nicasm;
+package site.projectname.err;
 
 import java.util.Arrays;
 import site.projectname.util.Logger;
 
 public class SyntaxErrorException extends Exception {
     private String message;
-    public SyntaxErrorException(String line, REGEX regex, int lineNumber, Logger log){
-        log.debug("SyntaxErrorException -->");
-        log.indent();
-        log.debug("Generating syntax error message for");
-        log.debug(line,1);
-        log.debug("Based on");
-        log.debug(regex.getName()+"="+regex.getRecipie(),1);
-        String[] regexs = extractRegex(regex,log);
-        String message = createMessage(line,regexs,lineNumber,log);
-        this.message = message;
-    }
     public SyntaxErrorException(String line, String regex, int lineNumber, Logger log){
         log.debug("SyntaxErrorException -->");
         log.indent();
@@ -71,9 +60,6 @@ public class SyntaxErrorException extends Exception {
                 temp += c;
         }
         return out;
-    }
-    private String[] extractRegex(REGEX regex, Logger log){
-        return extractRegex(regex.toString(),log);
     }
 
     private String createMessage(String line,String[] regexs,int lineNumber,Logger log){
