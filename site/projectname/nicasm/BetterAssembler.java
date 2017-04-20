@@ -13,20 +13,52 @@ import site.projectname.util.Numbers;
 
 
 public class BetterAssembler{
-    public static String fileName;
+    /**
+     * File to be Assembled
+     */
+    public String fileName;
 
-    private static Logger log;
-    private static Scanner inFile;
-    private static PrintWriter outFile;
+    private Logger log;
+    private Scanner inFile;
+    private PrintWriter outFile;
 
-    private static HashMap<String,Integer> labels = new HashMap<String,Integer>();
-    private static HashMap<String,Integer> variables = new HashMap<String,Integer>();
-    private static ArrayList<String> errors = new ArrayList<String>();
+    private HashMap<String,Integer> labels = new HashMap<String,Integer>();
+    private HashMap<String,Integer> variables = new HashMap<String,Integer>();
+    private ArrayList<String> errors = new ArrayList<String>();
 
-    private static int lineNumber = 1;
-    private static int bC = 15;
+    private int lineNumber = 1;
+    private int bC = 15;
+    /**
+     * Creates a BetterAssembler based on command line (or given) arguments
+     * @param   args    Arguments used to construct object
+     */
+    public BetterAssembler(String[] args){
+        if(args.length != 1 && args.length != 2){
+            System.err.println("Requires command line input!");
+            System.err.println("Proper usage : java site.projectname.nicasm.Assembler [-debug] filename ");
+            System.exit(-1);
+        } else if (args.length == 2) {
+            if(!args[0].equals("-debug")){
+                System.err.println("Invalid Syntax!");
+                System.err.println("Proper usage : java site.projectname.nicasm.Assembler [-debug] filename ");
+                System.exit(-1);
+            }
+            System.out.println("Debugging enabled!");
+            Logger.debugGlobal = true;
+            this.fileName = args[1];
+        } else {
+            if(args[0].equals("-debug") || args[0].equals("-h") || args[0].equals("--help")){
+                System.err.println("Invalid Syntax!");
+                System.err.println("Proper usage : java site.projectname.nicasm.Assembler [-debug] filename ");
+                System.exit(-1);
+            }
+            Logger.debugGlobal = false;
+            this.fileName = args[0];
+        }
+        initFiles();
+    }
 
-    private static String clean(String line){
+    private String clean(String line){
         // Take everything before comments
         line = line.split(";")[0];
         // Condense White Space
@@ -40,7 +72,7 @@ public class BetterAssembler{
         return line;
     }
 
-    private static String firstPass(String line) throws SyntaxErrorException {
+    private String firstPass(String line) throws SyntaxErrorException {
         line = clean(line);
         if(line.equals("")){
             return line;
@@ -52,7 +84,7 @@ public class BetterAssembler{
                 if(line.split(" ")[0].matches(REGEX.VARIABLE.toString()))
                     out = parseVariable(line);
                 else{
-                    throw new SyntaxErrorException(line,REGEX.VARIABLE.toString(),lineNumber,BetterAssembler.log);
+                    throw new SyntaxErrorException(line,REGEX.VARIABLE.toString(),lineNumber,this.log);
                 }
                 break;
             case '*':
@@ -60,7 +92,7 @@ public class BetterAssembler{
                 if(line.split(" ")[0].matches(REGEX.LABEL.toString()))
                     out = parseLabel(line);
                 else{
-                    throw new SyntaxErrorException(line,REGEX.LABEL.toString(),lineNumber,BetterAssembler.log);
+                    throw new SyntaxErrorException(line,REGEX.LABEL.toString(),lineNumber,this.log);
                 }
                 break;
             default:
@@ -71,8 +103,7 @@ public class BetterAssembler{
         return out;
     }
 
-
-    private static String parseVariable(String line){
+    private String parseVariable(String line){
         log.debug("Parsing variable on line " + lineNumber);
         String v = "|-"+lineNumber+":";
         log.debug(v + Logger.spacer(v,9) + line);
@@ -81,7 +112,7 @@ public class BetterAssembler{
         String out = parts[1] + " " + parts[2];
         return out;
     }
-    private static String parseLabel(String line){
+    private String parseLabel(String line){
         log.debug("Parsing label on line " + lineNumber);
         String v = "|-"+lineNumber+":";
         log.debug(v + Logger.spacer(v,9) + line);
@@ -93,9 +124,7 @@ public class BetterAssembler{
         out = out.substring(0,out.length()-1); // Removes extra space
         return out;
     }
-
-
-    private static String secondPass(final String line) throws SyntaxErrorException {
+    private String secondPass(final String line) throws SyntaxErrorException {
         if(line.equals(""))
             return "";
         log.debug("");
@@ -149,7 +178,7 @@ public class BetterAssembler{
                             else
                                 out = fillBits("0",out);
                         }
-                        out = fillBits(compOffset(parts[1],line,9),out);
+                        out = fillBits(compOffset(parts[1],9,line),out);
 
                         break ret;
                     default:
@@ -159,10 +188,10 @@ public class BetterAssembler{
                 for(String s: syntax){
                     if(s.contains("R")){
                         log.debug("Adding Register["+ rC +"] (" + parts[rC] + ")");
-                        out = fillBits(convertRegister(parts[rC++]),out);
+                        out = fillBits(convertReg(parts[rC++]),out);
                     } else if(s.contains("X")){
                         if(parts[rC].contains("*") || parts[rC].contains("$")){
-                            out = fillBits(compOffset(parts[rC++],line,s.length()),out);
+                            out = fillBits(compOffset(parts[rC++],s.length(),line),out);
                         } else if(parts[rC].contains("#") || parts[rC].contains("x")){
                             if(!(com.value.equals("AND") || com.value.equals("ADD")))
                             out = fillBits(convertImm(parts[rC++],s.length(),line),out);
@@ -183,7 +212,7 @@ public class BetterAssembler{
                             log.debug("Adding buffer");
                             out = fillBits("00",out);
                             log.debug("Adding Register["+ rC +"] (" + parts[rC] + ")");
-                            out = fillBits(convertRegister(parts[3]),out);
+                            out = fillBits(convertReg(parts[3]),out);
                         } else {
                             //log.unindent();
                             throw new SyntaxErrorException(clean(line),com.regex,lineNumber,log);
@@ -212,7 +241,7 @@ public class BetterAssembler{
 
         return realOut;
     }
-    private static String compOffset(String in, String line, int n) throws SyntaxErrorException {
+    private String compOffset(String in, int n,String line) throws SyntaxErrorException {
         int offSet =0;
         int address=0;
         if(in.startsWith("*")){
@@ -226,9 +255,7 @@ public class BetterAssembler{
         log.debug("Offset from " + in + "("+address+") is " + offSet + " lines");
         return Numbers.convert(10,2,true,offSet+"",n);
     }
-
-
-    private static String convertImm(String in,int len,String line) throws SyntaxErrorException{
+    private String convertImm(String in, int len, String line) throws SyntaxErrorException{
         if(!(in.startsWith("#") || in.startsWith("x")))
             throw new SyntaxErrorException("Invalid Immediate Value on " + lineNumber+"\n\t"+line,log);
         if(in.startsWith("#"))
@@ -237,13 +264,11 @@ public class BetterAssembler{
             return Numbers.convert(16,2,true,in,len);
         return "";
     }
-
-    private static String convertRegister(String in) throws SyntaxErrorException{
+    private String convertReg(String in) throws SyntaxErrorException{
         in = in.substring(1);
         return Numbers.convert(10,2,false,in,3);
     }
-
-    private static char[] fillBits(String bits, char[] in){
+    private char[] fillBits(String bits, char[] in){
         if(bits.replace("X","").equals(""))
             return in;
         int start = bC;
@@ -259,14 +284,51 @@ public class BetterAssembler{
         log.debug("");
         return in;
     }
+    private void checkErrors(){
+        if(!errors.isEmpty()){
+            System.err.println(errors.size() + " Error(s) found:");
+            for(String s: errors){
+                System.err.println(s);
+                for(String s2: s.split("\n"))
+                    log.write(s2);
+            }
+            System.exit(-1);
+        } else {
+            System.out.println("\t No Errors found.");
+        }
+    }
+    private void initFiles(){
+        File iF = null;
+        File oF = null;
+        try{
+            iF = new File(fileName);
+            inFile = new Scanner(iF);
+        } catch(Exception e){
+            log.writeError(e);
+            System.err.println("File not Found!");
+            log.debug("Absolute filepath for argument: ");
+            log.debug(iF.getAbsolutePath());
+            System.exit(-1);
+        }
+        try{
+            oF = new File(fileName.split("[.]")[0] + ".nicp");
+            outFile = new PrintWriter(oF);
+        } catch(Exception e){
+            log.writeError(e);
+            System.err.println("Error creating output file!");
+            log.debug("Attempting to output to :");
+            log.debug(iF.getAbsolutePath());
+            System.exit(-1);
+        }
+    }
 
     /**
      * Assembles a file from Assembly to Hex.
      * @param   file    File to be assembled
      */
-    public static void assemble(String file){
-        BetterAssembler.log = Logger.getLog("Assembler", Logger.debugGlobal);
-        BetterAssembler.log.write("Assembling file " + fileName);
+    public void assemble(String file){
+        this.log = Logger.getLog("Assembler", Logger.debugGlobal);
+        this.log.write("Assembling file " + fileName);
         if(!fileName.endsWith(".nic")){
             log.debug("Warning: Files should end with '.nic'!");
         }
@@ -313,70 +375,8 @@ public class BetterAssembler{
     }
 
     public static void main(String[] args){
-        checkArgs(args);
-        assemble(fileName);
-    }
-
-    private static void checkErrors(){
-        if(!errors.isEmpty()){
-            System.err.println(errors.size() + " Error(s) found:");
-            for(String s: errors){
-                System.err.println(s);
-                for(String s2: s.split("\n"))
-                    log.write(s2);
-            }
-            System.exit(-1);
-        } else {
-            System.out.println("\t No Errors found.");
-        }
-    }
-    private static void checkArgs(String[] args){
-        if(args.length != 1 && args.length != 2){
-            System.err.println("Requires command line input!");
-            System.err.println("Proper usage : java site.projectname.nicasm.Assembler [-debug] filename ");
-            System.exit(-1);
-        } else if (args.length == 2) {
-            if(!args[0].equals("-debug")){
-                System.err.println("Invalid Syntax!");
-                System.err.println("Proper usage : java site.projectname.nicasm.Assembler [-debug] filename ");
-                System.exit(-1);
-            }
-            System.out.println("Debugging enabled!");
-            Logger.debugGlobal = true;
-            BetterAssembler.fileName = args[1];
-        } else {
-            if(args[0].equals("-debug") || args[0].equals("-h") || args[0].equals("--help")){
-                System.err.println("Invalid Syntax!");
-                System.err.println("Proper usage : java site.projectname.nicasm.Assembler [-debug] filename ");
-                System.exit(-1);
-            }
-            Logger.debugGlobal = false;
-            BetterAssembler.fileName = args[0];
-        }
-    }
-    private static void initFiles(){
-        File iF = null;
-        File oF = null;
-        try{
-            iF = new File(fileName);
-            inFile = new Scanner(iF);
-        } catch(Exception e){
-            log.writeError(e);
-            System.err.println("File not Found!");
-            log.debug("Absolute filepath for argument: ");
-            log.debug(iF.getAbsolutePath());
-            System.exit(-1);
-        }
-        try{
-            oF = new File(fileName.split("[.]")[0] + ".nicp");
-            outFile = new PrintWriter(oF);
-        } catch(Exception e){
-            log.writeError(e);
-            System.err.println("Error creating output file!");
-            log.debug("Attempting to output to :");
-            log.debug(iF.getAbsolutePath());
-            System.exit(-1);
-        }
+        BetterAssembler a = new BetterAssembler(args);
+        a.assemble(a.fileName);
     }
 
 }
