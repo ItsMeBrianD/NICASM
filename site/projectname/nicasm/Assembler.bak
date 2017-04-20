@@ -35,47 +35,6 @@ public class Assembler{
     /**
      * All valid Assembly Commands for nic
      */
-    public enum Command {
-        ADD ("ADD",  "(ADD)([\\s]+)" + regRegEx + spaRegEx + regRegEx + spaRegEx + "(" + regRegEx + "|" + immRegEx5 + ")",   "0001", "DR SR1 XXX SR2 "),
-        AND ("AND",  "(AND)([\\s]+)" + regRegEx + spaRegEx + regRegEx + spaRegEx + "(" + regRegEx + "|" + immRegEx5 + ")",   "0101", "DR SR1 XXX SR2 "),
-        BR  ("BR",   "(BR)[Z]?[N]?[P]?([\\s]+)" + labRegEx,                                                                  "0000", "XXX XXXXXXXXX  "),
-        JMP ("JMP",  "(JMP)([\\s]+)" + regRegEx,                                                                             "1100", "000 BR 000000  "),
-        JSR ("JSR",  "(JSR)([\\s]+)" + labRegEx,                                                                             "0100", "1 XXXXXXXXXXX  "),
-        JSRR("JSRR", "(JSRR)([\\s]+)"+ regRegEx,                                                                             "0100", "000 BR 000000  "),
-        LD  ("LD",   "(LD)([\\s]+)"  + regRegEx + spaRegEx + labRegEx,                                                       "0010", "DR XXXXXXXXX   "),
-        LDI ("LDI",  "(LDI)([\\s]+)" + regRegEx + spaRegEx + labRegEx,                                                       "1010", "DR XXXXXXXXX   "),
-        LDR ("LDR",  "(LDR)([\\s]+)" + regRegEx + spaRegEx + regRegEx + spaRegEx + "("+labRegEx+"|"+immRegEx6+")",           "0110", "DR BR XXXXXX   "),
-        LEA ("LEA",  "(LEA)([\\s]+)" + regRegEx + spaRegEx + labRegEx,                                                       "1110", "DR XXXXXXXXX   "),
-        NOT ("NOT",  "(NOT)([\\s]+)" + regRegEx + spaRegEx + regRegEx,                                                       "1001", "DR SR 111111   "),
-        RET ("RET",  "(RET)([\\s]*)",                                                                                        "1100", "000111000000   "),
-        RTI ("RTI",  "(RTI)([\\s]*)",                                                                                        "1000", "000000000000   "),
-        ST  ("ST",   "(ST)([\\s]+)"  + regRegEx + spaRegEx + labRegEx,                                                       "0011", "SR XXXXXXXXX   "),
-        STI ("STI",  "(STI)([\\s]+)" + regRegEx + spaRegEx + labRegEx,                                                       "1011", "SR XXXXXXXXX   "),
-        STR ("STR",  "(STR)([\\s]+)" + regRegEx + spaRegEx + regRegEx + spaRegEx + "("+labRegEx+"|"+immRegEx6+")",           "0111", "SR BR XXXXXX   "),
-        TRAP("TRAP", "(TRAP)([\\s]+)("+labRegEx +"|"+immRegEx8+")",                                                          "1111", "0000 XXXXXXXX  ");
-        public final String regex;
-        public final String firstFour;
-        public final String syntax;
-        public final String value;
-        Command(String value,String regex,String firstFour,String syntax){
-            this.regex = regex;
-            this.firstFour = firstFour;
-            this.value=value;
-            this.syntax = syntax;
-        } Command(){this.regex = "";this.firstFour="";this.value="";this.syntax="";}
-
-        public static boolean contains(String value){
-            for(Command c: Command.values()){
-                if(Command.valueOf(c).equals(value)){
-                    return true;
-                }
-            }
-            return false;
-        }
-        public static String valueOf(Command c){
-            return c.value;
-        }
-    }
 
     /**
      * Regex for Register inputs, i.e. R0-R7
@@ -213,7 +172,7 @@ public class Assembler{
                             if(parts[3].matches(hexRegEx5)){
                                 binary = Numbers.hexToBin(parts[3],5);
                             } else if (parts[3].matches(decRegEx5)){
-                                binary = Numbers.decToBin(Integer.parseInt(parts[3].substring(1)),5);
+                                binary = Numbers.decToBin(Integer.parseInt(parts[3].substring(1)),5,true);
                             } else {
                                 log.debug("Invalid immediate value given!");
                             }
@@ -238,7 +197,7 @@ public class Assembler{
                             if(parts[1].matches(hexRegEx8))
                                 binary = Numbers.hexToBin(parts[1],8);
                             else if(parts[1].matches(decRegEx8))
-                                binary = Numbers.decToBin(Integer.parseInt(parts[1].substring(1)),8);
+                                binary = Numbers.decToBin(Integer.parseInt(parts[1].substring(1)),8,true);
                             else {
                                 String error = "\tInvalid 8-bit Immediate Value on line "+lineNumber+"! \n\t\t"+line+"\n\t\t";
                                 error += "      ^ INVALID VALUE!";
@@ -259,7 +218,7 @@ public class Assembler{
                     if (s.contains("X") && parts[regCounter].contains("*")){
                         int lineDif = labels.get(parts[regCounter++]) - lineNumber;
                         log.debug("Line Difference = " + lineDif);
-                        String bits = Numbers.decToBin(lineDif,s.length()); // TODO: Add negative binary number conversion
+                        String bits = Numbers.decToBin(lineDif,s.length(),true); // TODO: Add negative binary number conversion
                         log.debug(bits);
                         for(int bit=bitCounter;bit>bitCounter-s.length();bit--){
                             log.debug("Setting bit " + bit + " with value " + bits.charAt(bitCounter-bit) + " from Label "+ parts[regCounter-1]);
@@ -269,7 +228,7 @@ public class Assembler{
                     else if (s.contains("X") && parts[regCounter].contains("$")){
                         int lineDif = variables.get(parts[regCounter++]) - lineNumber;
                         log.debug("Line Difference = " + lineDif);
-                        String bits = Numbers.decToBin(lineDif,s.length()); // TODO: Add negative binary number conversion
+                        String bits = Numbers.decToBin(lineDif,s.length(),true); // TODO: Add negative binary number conversion
                         log.debug(bits);
                         for(int bit=bitCounter;bit>bitCounter-s.length();bit--){
                             log.debug("Setting bit " + bit + " with value " + bits.charAt(bitCounter-bit) + " from Variable "+ parts[regCounter-1]);
@@ -280,7 +239,7 @@ public class Assembler{
                         if(parts[regCounter].matches(immRegEx6)){
                             String bits = "";
                             if(parts[regCounter].matches(decRegEx6))
-                                bits = Numbers.decToBin(Integer.parseInt(parts[3].substring(1)),6);
+                                bits = Numbers.decToBin(Integer.parseInt(parts[3].substring(1)),6,true);
                             else if(parts[regCounter].matches(hexRegEx6))
                                 bits = Numbers.hexToBin(parts[regCounter],6);
                             else {
@@ -302,7 +261,7 @@ public class Assembler{
                     }
                     if (s.contains("R") && parts[regCounter].contains("R")){
                         int r = Integer.parseInt(parts[regCounter++].substring(1));
-                        String bits = Numbers.decToBin(r,3);
+                        String bits = Numbers.decToBin(r,3,false);
                         for(int bit=bitCounter;bit>bitCounter-3;bit--){
                             log.debug("Setting bit " + bit + " with value " + bits.charAt(bitCounter-bit) + " from Reg"+(regCounter-2)+"[" + (bitCounter-bit) + "]");
                             outBinary[bit] = bits.charAt(bitCounter-bit);
