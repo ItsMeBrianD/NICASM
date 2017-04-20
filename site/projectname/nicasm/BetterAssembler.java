@@ -316,8 +316,19 @@ public class BetterAssembler
 	private void initFiles(){
 		File iF = null;
 		File oF = null;
+		log.debug("Getting file "+fileName);
 		try{
-			iF = new File(fileName);
+			if(fileName.contains("/") || fileName.contains("\\")){
+				String[] names = fileName.split("\\|/");
+				File[] dirs = new File[names.length];
+				dirs[0] = new File(names[0]);
+				for(int i=1; i<names.length;i++){
+					dirs[i] = new File(dirs[i-1],names[i]);
+				}
+				iF = dirs[dirs.length-1];
+			} else {
+				iF = new File(fileName);
+			}
 			inFile = new Scanner(iF);
 		} catch (Exception e){
 			log.writeError(e);
