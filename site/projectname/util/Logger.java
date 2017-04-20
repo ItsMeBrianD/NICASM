@@ -237,9 +237,9 @@ public class Logger {
 			int lineNum = stackTraceElements[2].getLineNumber();
 			if(className.startsWith("site.projectname"))
 				className = className.split("[.]")[className.split("[.]").length-1];
-			String indent = "-";
+			String indent = "--";
 			for(int i=0;i<indentLevel;i++)
-				indent+="-";
+				indent+="--";
 			for(int i=0;i<=indentLevel;i++)
 			indent=indent+Logger.spacer(indent,4*(indentLevel) + 4);
 			//indent+="\t";
@@ -255,9 +255,9 @@ public class Logger {
 			int lineNum = stackTraceElements[2].getLineNumber();
 			if(className.startsWith("site.projectname"))
 				className = className.split("[.]")[className.split("[.]").length-1];
-			String indent = "-";
+			String indent = "--";
 			for(int i=0;i<indentLevel+indentMod;i++)
-				indent+="-";
+				indent+="--";
 			indent=indent+Logger.spacer(indent,4*(indentLevel+indentMod) + 4);
 			//indent+="\t";
 
