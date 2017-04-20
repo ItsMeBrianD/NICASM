@@ -153,7 +153,12 @@ public class BetterAssembler
 				// Commands that must be handled entirely differently go here
 				switch (com){
 				case FILL:
-					out = fillBits(convertImm(parts[1], 16, line), out);
+					if(parts[1].matches(REGEX.IMM16.toString()))
+						out = fillBits(convertImm(parts[1], 16, line), out);
+					else if(parts[1].matches(REGEX.CHAR.toString()))
+						out = fillBits(Numbers.convert(10,2,false,(int)parts[1].charAt(1)+"",16),out);
+					else
+						throw new SyntaxErrorException(clean(line), com.regex, lineNumber, log);
 					break ret;
 				case BLK:
 

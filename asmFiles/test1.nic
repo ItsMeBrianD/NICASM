@@ -1,4 +1,4 @@
-$VAR	.FILL x0000
+$VAR	.FILL 'x'
 *LOOP   ADD R7,R2,R7 ;This is a comment
 $STUFF	.BLK x05
 	ADD R7,R1,R3
