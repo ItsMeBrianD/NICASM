@@ -23,6 +23,10 @@ hs_err_pid*
 
 # arbitrary filenames
 *.nicp
+*.asm
+*.obj
+*.hex
+*.sym
 
 # eclipse project files
 .classpath
