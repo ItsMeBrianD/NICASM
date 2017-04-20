@@ -121,7 +121,8 @@ public class BetterAssembler{
         String out = "";
         for(int i=1;i<parts.length;i++)
             out += parts[i] + " ";
-        out = out.substring(0,out.length()-1); // Removes extra space
+        if(!out.equals(""))
+          out = out.substring(0,out.length()-1); // Removes extra space
         return out;
     }
     private String secondPass(final String line) throws SyntaxErrorException {
