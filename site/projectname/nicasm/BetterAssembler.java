@@ -7,8 +7,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Scanner;
 
+import site.projectname.err.SyntaxErrorException;
 import site.projectname.util.Logger;
 import site.projectname.util.Numbers;
+
 
 public class BetterAssembler{
     public static String fileName;
@@ -50,7 +52,7 @@ public class BetterAssembler{
                 if(line.split(" ")[0].matches(REGEX.VARIABLE.toString()))
                     out = parseVariable(line);
                 else{
-                    throw new SyntaxErrorException(line,REGEX.VARIABLE,lineNumber,BetterAssembler.log);
+                    throw new SyntaxErrorException(line,REGEX.VARIABLE.toString(),lineNumber,BetterAssembler.log);
                 }
                 break;
             case '*':
@@ -58,7 +60,7 @@ public class BetterAssembler{
                 if(line.split(" ")[0].matches(REGEX.LABEL.toString()))
                     out = parseLabel(line);
                 else{
-                    throw new SyntaxErrorException(line,REGEX.LABEL,lineNumber,BetterAssembler.log);
+                    throw new SyntaxErrorException(line,REGEX.LABEL.toString(),lineNumber,BetterAssembler.log);
                 }
                 break;
             default:
@@ -107,8 +109,9 @@ public class BetterAssembler{
             bC = 15;
             int rC = 1;
             if(line.matches(com.regex)){
+                log.debug("Adding Command ID");
                 out = fillBits(com.firstFour,out);
-                // Special case commands go here
+                // Commands that must be handled entirely differently go here
                 switch(com){
                     case FILL:
                         out = fillBits(convertImm(parts[1],16,line),out);
@@ -149,33 +152,43 @@ public class BetterAssembler{
                         out = fillBits(compOffset(parts[1],line,9),out);
 
                         break ret;
-                    case ADD: case AND: // Can have either a register or an immediate value
-                        out = fillBits(convertRegister(parts[1]),out);
-                        out = fillBits(convertRegister(parts[2]),out);
-                        if(parts[3].matches(REGEX.IMM5.toString())){
-                            out = fillBits("1",out);
-                            out = fillBits(convertImm(parts[3],5,line),out);
-                        } else if(parts[3].matches(REGEX.REGISTER.toString())){
-                            out = fillBits("000",out);
-                            out = fillBits(convertRegister(parts[3]),out);
-                        } else {
-                            //log.unindent();
-                            throw new SyntaxErrorException(clean(line),com.regex,lineNumber,log);
-                        }
-                        break ret;
                     default:
                         break;
                 }
                 String[] syntax = com.syntax.split(" ");
                 for(String s: syntax){
                     if(s.contains("R")){
-                        log.debug("Adding Register["+ rC +"]");
+                        log.debug("Adding Register["+ rC +"] (" + parts[rC] + ")");
                         out = fillBits(convertRegister(parts[rC++]),out);
                     } else if(s.contains("X")){
                         if(parts[rC].contains("*") || parts[rC].contains("$")){
                             out = fillBits(compOffset(parts[rC++],line,s.length()),out);
+                        } else if(parts[rC].contains("#") || parts[rC].contains("x")){
+                            if(!(com.value.equals("AND") || com.value.equals("ADD")))
+                            out = fillBits(convertImm(parts[rC++],s.length(),line),out);
                         }
+                    } else {
+                        out = fillBits(s,out);
                     }
+                }
+                switch(com){
+                    case ADD: case AND: // Can have either a register or an immediate value
+                        if(parts[3].matches(REGEX.IMM5.toString())){
+                            log.debug("Adding immediate|reg marker");
+                            out = fillBits("1",out);
+                            out = fillBits(convertImm(parts[3],5,line),out);
+                        } else if(parts[3].matches(REGEX.REGISTER.toString())){
+                            log.debug("Adding immediate|reg marker");
+                            out = fillBits("0",out);
+                            log.debug("Adding buffer");
+                            out = fillBits("00",out);
+                            log.debug("Adding Register["+ rC +"] (" + parts[rC] + ")");
+                            out = fillBits(convertRegister(parts[3]),out);
+                        } else {
+                            //log.unindent();
+                            throw new SyntaxErrorException(clean(line),com.regex,lineNumber,log);
+                        }
+                        break ret;
                 }
             } else {
                 //log.unindent();
@@ -188,26 +201,28 @@ public class BetterAssembler{
 
         String realOut = new String(out);
 
-        log.debug("Line " + lineNumber + " compiled to ");
-        log.debug(realOut,1);
-        log.unindent();
-
         if(realOut.contains("-"))
-            throw new SyntaxErrorException("Command on line " + lineNumber +" has unset bits!\n\n"+line,log);
+            throw new SyntaxErrorException("Command on line " + lineNumber +" has unset bits!\n\t"+line,log);
+
+        log.debug("Line " + lineNumber + " compiled to ");
+        log.debug("(b)"+realOut,1);
+        realOut = Numbers.convert(2,16,false,realOut);
+        log.debug("(x)"+realOut,1);
+        log.unindent();
 
         return realOut;
     }
     private static String compOffset(String in, String line, int n) throws SyntaxErrorException {
-        int offSet = 1;
+        int offSet =0;
         int address=0;
         if(in.startsWith("*")){
-            address = labels.get(in)-lineNumber;
+            address = labels.get(in)-1;
         } else if(in.startsWith("$")){
-            address = variables.get(in)-lineNumber;
+            address = variables.get(in);
         } else{
             throw new SyntaxErrorException("Invalid Label on line "+lineNumber+"\n\t"+line,log);
         }
-        offSet += address;
+        offSet += address-lineNumber;
         log.debug("Offset from " + in + "("+address+") is " + offSet + " lines");
         return Numbers.convert(10,2,true,offSet+"",n);
     }
@@ -217,13 +232,13 @@ public class BetterAssembler{
         if(!(in.startsWith("#") || in.startsWith("x")))
             throw new SyntaxErrorException("Invalid Immediate Value on " + lineNumber+"\n\t"+line,log);
         if(in.startsWith("#"))
-            return Numbers.convert(10,2,false,in,len);
+            return Numbers.convert(10,2,true,in,len);
         if(in.startsWith("x"))
-            return Numbers.convert(16,2,false,in,len);
+            return Numbers.convert(16,2,true,in,len);
         return "";
     }
 
-    private static String convertRegister(String in){
+    private static String convertRegister(String in) throws SyntaxErrorException{
         in = in.substring(1);
         return Numbers.convert(10,2,false,in,3);
     }
@@ -241,6 +256,7 @@ public class BetterAssembler{
             }
         }
         log.debug(Arrays.toString(in),1);
+        log.debug("");
         return in;
     }
 
@@ -283,7 +299,7 @@ public class BetterAssembler{
                 String line = secondPass(l);
 
                 if(line.length() > 0){
-                    outFile.print(line+" ");
+                    outFile.print(line+"\n");
                 }
             } catch(SyntaxErrorException e){
                 errors.add(e.getMessage());
