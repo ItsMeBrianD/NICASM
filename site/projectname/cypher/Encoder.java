@@ -64,7 +64,7 @@ public class Encoder{
         for(char c: out.toCharArray()){
             temp += c;
             if(temp.length() == 4){
-                out2+=Numbers.hexMap.get(temp);
+                out2+=Numbers.convert(2,16,false,temp);
                 temp = "";
             }
         }
@@ -81,8 +81,8 @@ public class Encoder{
         String temp = "";
 
         for(char c: in.toCharArray()){
-            log.write(c +" -> " + Numbers.hexMap.get(c+""));
-            temp += Numbers.hexMap.get(c+"");
+            log.write(c +" -> " + Numbers.convert(16,2,false,c+""));
+            temp += Numbers.convert(16,2,false,c+"");
         }
         in = temp;
         log.write(temp);
@@ -130,7 +130,6 @@ public class Encoder{
         else
             Logger.debugGlobal = false;
 
-        Numbers.init();
         Encoder e = new Encoder('*');
         Scanner sc = new Scanner(System.in);
         String s = e.encode(sc.nextLine());
