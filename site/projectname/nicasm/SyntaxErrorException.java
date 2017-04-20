@@ -39,7 +39,7 @@ public class SyntaxErrorException extends Exception {
             else if (c == ')'){
                 level --;
                 if(level == 0){
-                    if(temp.equals("[\\s]+")||temp.equals("[\\s]*")){
+                    if(temp.equals("[\\s]+")||temp.equals("[\\s]*")||temp.equals("[,][ ]*")){
                         log.debug("|-\t Skipping whitespace token");
                         temp = "";
                     } else {
