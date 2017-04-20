@@ -157,7 +157,7 @@ public class BetterAssembler{
                             } else {
                                 log.debug("BLK Recursing");
                                 log.unindent();
-                                return secondPass(".FILL x0000") + " " +secondPass(".BLK #"+i) + " ";
+                                return secondPass(".FILL x0000") + " " +secondPass(".BLK #"+i);
                             }
                         }
 
@@ -236,7 +236,7 @@ public class BetterAssembler{
 
         log.debug("Line " + lineNumber + " compiled to ");
         log.debug("(b)"+realOut,1);
-        realOut = Numbers.convert(2,16,false,realOut);
+        realOut = Numbers.convert(2,16,false,realOut).substring(1);
         log.debug("(x)"+realOut,1);
         log.unindent();
 
@@ -362,7 +362,7 @@ public class BetterAssembler{
                 String line = secondPass(l);
 
                 if(line.length() > 0){
-                    outFile.print(line+"\n");
+                    outFile.print(line+" ");
                 }
             } catch(SyntaxErrorException e){
                 errors.add(e.getMessage());
