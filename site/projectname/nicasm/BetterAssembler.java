@@ -92,7 +92,7 @@ public class BetterAssembler
     			if (line.split(" ")[0].matches(REGEX.VARIABLE.toString()))
     				out = parseVariable(line);
     			else{
-    				throw new SyntaxErrorException(line, REGEX.VARIABLE.toString(), lineAddr, this.log);
+    				throw new SyntaxErrorException(line, REGEX.VARIABLE.toString(), lineAddr);
     			}
     			break;
     		case '*':
@@ -104,7 +104,7 @@ public class BetterAssembler
                     }
                 }
     			else{
-    				throw new SyntaxErrorException(line, REGEX.LABEL.toString(), lineAddr, this.log);
+    				throw new SyntaxErrorException(line, REGEX.LABEL.toString(), lineAddr);
     			}
     			break;
     		default:
@@ -148,13 +148,25 @@ public class BetterAssembler
 		if (line.equals(""))
 			return "";
         log.debug("");
-		log.debug("Parsing command on line " + lineNum);
+        log.debug("Parsing command on line " + lineNum);
         log.indent();
-		log.debug("Command:");
-		log.debug(line, 1);
 		char[] out = { '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-' };
 		String[] parts = line.replaceAll("([\\s]+)|" + REGEX.SPACE, " ").split(" ");
-		ret: if (Command.contains(parts[0])){
+        if(Shorthand.contains(parts[0])){
+            log.debug("");
+            log.debug("Command is shorthand, converting to basic commands");
+            log.debug(line, 1);
+            log.debugSpacer();
+            String[] newLines = Shorthand.get(parts[0]).convertSyntax(line,lineAddr);
+            String realOut = "";
+            for(String s: newLines){
+                realOut += secondPass(s) + " ";
+            }
+            log.debugSpacer();
+            return clean(realOut);
+        } else ret: if (Command.contains(parts[0])){
+    		log.debug("Command:");
+    		log.debug(line, 1);
 			Command com = Command.get(parts[0]);
 			bC = 15;
 			int rC = 1;
@@ -169,7 +181,7 @@ public class BetterAssembler
     					else if(parts[1].matches(REGEX.CHAR.toString()))
     						out = fillBits(Numbers.convert(10,2,false,(int)parts[1].charAt(1)+"",16),out);
     					else
-    						throw new SyntaxErrorException(clean(line), com.regex, lineAddr, log);
+    						throw new SyntaxErrorException(clean(line), com.regex, lineAddr);
     					break ret;
     				case BLK:
     					int value = Integer.parseInt(Numbers.convert(2, 10, false, convertImm(parts[1], 16, line), 16).substring(1));
@@ -237,23 +249,23 @@ public class BetterAssembler
     						out = fillBits(convertReg(parts[3]), out);
     					} else{
     						// log.unindent();
-    						throw new SyntaxErrorException(clean(line), com.regex, lineAddr, log);
+    						throw new SyntaxErrorException(clean(line), com.regex, lineAddr);
     					}
 	                   break ret;
 				}
 			} else{
 				// log.unindent();
-				throw new SyntaxErrorException(clean(line), com.regex, lineAddr, log);
+				throw new SyntaxErrorException(clean(line), com.regex, lineAddr);
 			}
 		} else{
 			// log.unindent();
-			throw new SyntaxErrorException("Invalid command on line " + lineNum + "\n\t" + line, log);
+			throw new SyntaxErrorException("Invalid command on line " + lineNum + "\n\t" + line);
 		}
 
 		String realOut = new String(out);
 
 		if (realOut.contains("-"))
-			throw new SyntaxErrorException("Command on line " + lineNum + " has unset bits!\n\t" + line, log);
+			throw new SyntaxErrorException("Command on line " + lineNum + " has unset bits!\n\t" + line);
 
 		log.debug("Line " + lineAddr + " compiled to ");
 		log.debug("(b)" + realOut, 1);
@@ -273,7 +285,7 @@ public class BetterAssembler
 		} else if (in.startsWith("$")){
 			address = variables.get(in);
 		} else{
-			throw new SyntaxErrorException("Invalid Label on line " + lineNum + "\n\t" + line, log);
+			throw new SyntaxErrorException("Invalid Label on line " + lineNum + "\n\t" + line);
 		}
 		offSet += address - lineAddr;
 		log.debug("Offset from current addr("+lineAddr+") to " + in + "(" + address + ") is " + offSet + " lines");
@@ -283,7 +295,7 @@ public class BetterAssembler
 
 	private String convertImm(String in, int len, String line) throws SyntaxErrorException{
 		if (!(in.startsWith("#") || in.startsWith("x")))
-			throw new SyntaxErrorException("Invalid Immediate Value on " + lineAddr + "\n\t" + line, log);
+			throw new SyntaxErrorException("Invalid Immediate Value on " + lineAddr + "\n\t" + line);
 		if (in.startsWith("#"))
 			return Numbers.convert(10, 2, true, in, len);
 		if (in.startsWith("x"))
