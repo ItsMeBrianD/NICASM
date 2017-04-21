@@ -7,9 +7,10 @@ import site.projectname.util.Logger;
 public enum Shorthand{
 	SUB(".SUB","(.SUB)([\\s]+)"+REGISTER+SPACE+REGISTER+SPACE+"("+REGISTER+"|"+IMM5+")",
 		".SUB DR SR1 SR2",
-		new String[]{"NOT SR2,SR2",
-					 "ADD SR2,SR2,#1",
-				     "ADD DR,SR1,SR2"}
+		new String[]{
+			"NOT SR2,SR2",
+			"ADD SR2,SR2,#1",
+			"ADD DR,SR1,SR2"}
 	),
 	MUL(".MUL","(.MUL)([\\s]+)"+REGISTER+SPACE+REGISTER+SPACE+REGISTER,
 		".MUL DR SR1 SR2",
