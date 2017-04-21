@@ -240,7 +240,6 @@ public class Logger {
 			String indent = "--";
 			for(int i=0;i<indentLevel;i++)
 				indent+="--";
-			for(int i=0;i<=indentLevel;i++)
 			indent=indent+Logger.spacer(indent,4*(indentLevel) + 4);
 			//indent+="\t";
 
