@@ -35,7 +35,6 @@ public class Numbers{
             }
             out = 'x'+out;
         }
-		System.out.println(out);
         return out;
     }
     public static String convert(int startBase, int endBase, boolean signed, String in){
@@ -49,7 +48,6 @@ public class Numbers{
         if(signed){
             if(startBase == 2 && in.charAt(0) == '1' && endBase != 16){
                 in = subFlip(in);
-				System.out.println(in);
                 neg = true;
             } else if (in.startsWith("-")){
                 in = in.substring(1); // Chop off negative sign
@@ -118,11 +116,10 @@ public class Numbers{
             out = flipAdd('0'+out);
         else if(neg){
             if(out.startsWith("#") || out.startsWith("x"))
-                out = out.charAt(0) + '-' + out.substring(1);
+                out = out.charAt(0) + "-" + out.substring(1);
             else
-                out = '-' + out;
+                out = "-" + out;
         }
-		System.out.println(out);
         return out;
     }
 
@@ -155,13 +152,15 @@ public class Numbers{
 		int j =0;
         for(j=in.length()-1;j>=0;j--){
 			out[j] = flip(in.charAt(j));
-			if(in.charAt(j) == '0')
+			if(in.charAt(j) == '1'){
+                j--;
+                out[j] = flip(in.charAt(j));
                 break;
+            }
         }
 		for(;j>=0;j--){
 			out[j] = in.charAt(j);
 		}
-		System.out.println(new String(out));
         // Flip Bits
         for(int i=0;i<out.length;i++){
             out[i] = flip(out[i]);
