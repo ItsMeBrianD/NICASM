@@ -284,11 +284,14 @@ public class BetterAssembler
 			address = labels.get(in);
 		} else if (in.startsWith("$")){
 			address = variables.get(in);
+		} else if(in.matches(REGEX.IMM8.toString())){
+			log.debug("Immediate value read as " + Numbers.convert(2,10,true,convertImm(in,8,line),8));
+			address = lineAddr + Integer.parseInt(Numbers.convert(2,10,true,convertImm(in,8,line),8));
 		} else{
 			throw new SyntaxErrorException("Invalid Label on line " + lineNum + "\n\t" + line);
 		}
 		offSet += address - lineAddr;
-		log.debug("Offset from current addr("+lineAddr+") to " + in + "(" + address + ") is " + offSet + " lines");
+		log.debug("Offset from current addr("+lineAddr+") to " + in.substring(1) + "(" + address + ") is " + offSet + " lines");
         log.debug("Converting offset " + offSet +" into binary with " + n + " bits.");
 		return Numbers.convert(10, 2, true, offSet+"", n);
 	}
@@ -374,8 +377,7 @@ public class BetterAssembler
 	/**
 	 * Assembles a file from Assembly to Hex.
 	 *
-	 * @param file
-	 *            File to be assembled
+	 * @param file	File to be assembled
 	 */
 	public void assemble(String file){
 		this.log.write("Assembling file " + fileName);
