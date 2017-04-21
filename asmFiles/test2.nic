@@ -16,5 +16,5 @@ $VAR      .FILL xFFFF
           JMP     R7
           RET
 
-          ;.SUB R0,R1,#1
+          .SUB R0,R1,R1
           ;.SUB R0,R1,R1
