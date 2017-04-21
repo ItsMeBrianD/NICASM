@@ -13,16 +13,27 @@ public class Numbers{
     private static Logger log;
 
     public static String convert(int startBase, int endBase, boolean signed, String in, int normalize) throws SyntaxErrorException {
-        if(endBase != 2)
+        if(endBase != 2 && endBase != 16)
             return convert(startBase,endBase,signed,in);
         String out = convert(startBase,endBase,signed,in);
         if(out.length() > normalize)
             throw new SyntaxErrorException("Possible loss of precision!\n\t"+in+" cannot be normalized to "+normalize+" bits without loss of precision!");
-        while(out.length() < normalize){
-            if(signed && in.charAt(0) == '-')
-                out = '1' + out;
-            else
-                out = '0' + out;
+        if(endBase == 2){
+            while(out.length() < normalize){
+                if(signed && in.length() > 2 && (in.charAt(0) == '-' || in.charAt(1) == '-'))
+                    out = '1' + out;
+                else
+                    out = '0' + out;
+            }
+        } else if(endBase == 16){
+            out = out.substring(1);
+            while(out.length() < normalize){
+                if(signed && ((in.charAt(0) == '-' || in.charAt(1) == '-') || (startBase == 2 && in.charAt(0) == '1')))
+                    out = "F" + out;
+                else
+                    out = "0" + out;
+            }
+            out = 'x'+out;
         }
         return out;
     }
@@ -30,6 +41,8 @@ public class Numbers{
         String out = "";
         int value = 0;
         boolean neg = false;
+        if(in.equals(""))
+            in = "0";
         if(in.startsWith("#") || in.startsWith("x"))
             in = in.substring(1);
         if(signed){
