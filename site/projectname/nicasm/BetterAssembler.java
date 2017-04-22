@@ -224,18 +224,17 @@ public class BetterAssembler
 			default:
 				break;
 			case PRINT://2 forms
-				 out = fillBits("1000",out);
+				 out = fillBits("1",out);
 				 if(parts[1].matches(REGEX.CHAR.toString())){
-					 out = fillBits("1",out);
+					 out = fillBits("0001",out);
 					 log.debug("Printing from character");
 					 String charVal = Numbers.convert(10,2,false,(int)parts[1].charAt(1)+"",7);
 					 out = fillBits(charVal,out);
 				 }
 				 else if (parts[1].matches(REGEX.REGISTER.toString())){
-					 out = fillBits("0",out);
 					 log.debug("Printing from Register[" + rC + "] (" + parts[rC] + ")");
 					 out = fillBits(convertReg(parts[1]), out);
-					 out = fillBits("0000",out);
+					 out = fillBits("00000000",out);
 				 } else {
 					 // log.unindent();
 					 throw new SyntaxErrorException(clean(line), com.regex, lineAddr);
@@ -439,7 +438,7 @@ public class BetterAssembler
 		String compiled = "";
 		String offset = "";
         try{
-			offset = Numbers.convert(10,16,false,mainOffset+"",4) + " ";
+			offset = Numbers.convert(10,16,false,mainOffset+"",4).substring(1) + " ";
 		} catch(SyntaxErrorException e){
 
 		}

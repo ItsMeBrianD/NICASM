@@ -1,6 +1,23 @@
+
+$INTP				.FILL x0030
+					.MAIN
+
+					LD R3, $INTP
+					NOT R4, R3
+					ADD R4, R4, #1
+
+					ADD R2, R2, xA
+
  					PRINT '>'
 					READ R0
+					ADD R0, R0, R4
+					PRINT R2
+
 					PRINT '>'
 					READ R1
+					ADD R1, R1, R4
+					PRINT R2
+					
 					ADD R0, R0, R1
+					ADD R0, R0, R3
 					PRINT R0
