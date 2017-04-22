@@ -457,7 +457,7 @@ public class BetterAssembler
             }
         }
 		log.unindent();
-        outFile.write(compiled);
+        outFile.write("v2.0 raw\n" + compiled + "D000");
         outFile.close();
 	}
     /**

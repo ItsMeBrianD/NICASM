@@ -1,6 +1,6 @@
-$VAR	.FILL 'x'
-*LOOP   ADD R7,R2,R7 ;This is a comment
-$STUFF	.BLK x05
-		ADD R7,R1,R3
-		BR *LOOP
-		LD R0,$VAR
+					PRINT '>'
+					READ R0
+					PRINT '>'
+					READ R1
+					ADD R0, R0, R1
+					PRINT R0
