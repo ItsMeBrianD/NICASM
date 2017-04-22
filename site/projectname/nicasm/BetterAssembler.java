@@ -163,6 +163,7 @@ public class BetterAssembler
                 realOut += secondPass(s) + " ";
             }
             log.debugSpacer();
+			log.unindent();
             return clean(realOut);
         } else ret: if (Command.contains(parts[0])){
     		log.debug("Command:");
