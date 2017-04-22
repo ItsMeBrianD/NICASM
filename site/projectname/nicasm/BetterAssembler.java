@@ -200,7 +200,6 @@ public class BetterAssembler
       				}
             	log.unindent();
               return clean(realOut);
-
 	          case BR: // Can appear in 8 forms
 	              parts[0] = parts[0].toUpperCase();
 	              if (parts[0].length() == 2){
@@ -222,9 +221,27 @@ public class BetterAssembler
 	              out = fillBits(compOffset(parts[1], 9, line), out);
 
 	              break ret;
-    				default:
-    					break;
-				}
+			default:
+				break;
+			case PRINT://2 forms
+				 out = fillBits("1000",out);
+				 if(parts[1].matches(REGEX.CHAR.toString())){
+					 out = fillBits("1",out);
+					 log.debug("Printing from character");
+					 String charVal = Numbers.convert(10,2,false,(int)parts[1].charAt(1)+"",7);
+					 out = fillBits(charVal,out);
+				 }
+				 else if (parts[1].matches(REGEX.REGISTER.toString())){
+					 out = fillBits("0",out);
+					 log.debug("Printing from Register[" + rC + "] (" + parts[rC] + ")");
+					 out = fillBits(convertReg(parts[1]), out);
+					 out = fillBits("0000",out);
+				 } else {
+					 // log.unindent();
+					 throw new SyntaxErrorException(clean(line), com.regex, lineAddr);
+				 }
+				 break;
+			}
 				String[] syntax = com.syntax.split(" ");
 				for (String s : syntax){
 					if (s.contains("R") && parts[rC].contains("R") && !parts[rC].contains("'R'")){
@@ -242,8 +259,6 @@ public class BetterAssembler
 					}
 				}
 				switch (com){
-					case PRINT://2 forms
-							break;
     				case ADD:
     				case AND: // Can have either a register or an immediate value
     					if (parts[3].matches(REGEX.IMM5.toString())){
@@ -262,6 +277,7 @@ public class BetterAssembler
     						throw new SyntaxErrorException(clean(line), com.regex, lineAddr);
     					}
 	                   break ret;
+
 				}
 			} else{
 				// log.unindent();

@@ -26,3 +26,6 @@ $VAR      .FILL xFFFF
           .SETV #0,R2
 
           .ZERO R0
+
+          PRINT R0
+          PRINT 'X'

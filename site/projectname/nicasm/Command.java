@@ -16,7 +16,7 @@ public enum Command {
     NOT  ("NOT",  "(NOT)([\\s]+)" +REGISTER+SPACE+REGISTER,                                  "1001", "DR SR 111111   "),
     RET  ("RET",  "(RET)([\\s]*)",                                                           "1100", "000111000000   "),
     READ ("READ", "(READ)([\\s]+)"+REGISTER,                                                 "1000", "0 DR 00000000  "),
-    PRINT("PRINT","(PRINT)([\\s]+)"+"("+REGISTER+"|"+CHAR+")",                               "1000", "1 SR 00000000  "),
+    PRINT("PRINT","(PRINT)([\\s]+)"+"("+REGISTER+"|"+CHAR+")",                               "1000", "XX XXX XXXXXXX "),
     ST   ("ST",   "(ST)([\\s]+)"  +REGISTER+SPACE+VARIABLE,                                  "0011", "SR XXXXXXXXX   "),
     STI  ("STI",  "(STI)([\\s]+)" +REGISTER+SPACE+VARIABLE,                                  "1011", "SR XXXXXXXXX   "),
     STR  ("STR",  "(STR)([\\s]+)" +REGISTER+SPACE+REGISTER+SPACE+IMM6,                       "0111", "SR BR XXXXXX   "),
