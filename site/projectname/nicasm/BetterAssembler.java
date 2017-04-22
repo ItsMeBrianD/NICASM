@@ -286,14 +286,15 @@ public class BetterAssembler
 		} else if (in.startsWith("$")){
 			address = variables.get(in);
 		} else if(in.matches(REGEX.IMM8.toString())){
-			log.debug("Immediate value read as " + Numbers.convert(2,10,true,convertImm(in,8,line),8));
-			address = lineAddr + Integer.parseInt(Numbers.convert(2,10,true,convertImm(in,8,line),8));
+			log.debug("Immediate value converted to " + Numbers.tcToInt(convertImm(in,8,line)));
+			address = lineAddr + Numbers.tcToInt(convertImm(in,8,line));
 		} else{
 			throw new SyntaxErrorException("Invalid Label on line " + lineNum + "\n\t" + line);
 		}
 		offSet += address - lineAddr;
 		log.debug("Offset from current addr("+lineAddr+") to " + in.substring(1) + "(" + address + ") is " + offSet + " lines");
         log.debug("Converting offset " + offSet +" into binary with " + n + " bits.");
+		log.debug(Numbers.convert(10, 2, true, offSet+"", n),1);
 		return Numbers.convert(10, 2, true, offSet+"", n);
 	}
 
@@ -386,7 +387,6 @@ public class BetterAssembler
 			log.debug("Warning: Files should end with '.nic'!");
 		}
 		initFiles();
-
 		String s = "";
 		while (inFile.hasNextLine()){
 			try{
