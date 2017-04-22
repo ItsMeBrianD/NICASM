@@ -17,4 +17,8 @@ $VAR      .FILL xFFFF
           RET
 
           .SUB R0,R1,R1
-          ;.SUB R0,R1,R1
+          .MUL R0,R1,R1
+          .MUL R0,R2,#2
+          BR #-5
+
+          PUSH R5

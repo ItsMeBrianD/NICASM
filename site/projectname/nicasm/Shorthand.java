@@ -5,11 +5,27 @@ import site.projectname.err.SyntaxErrorException;
 import site.projectname.util.Logger;
 
 public enum Shorthand{
-	SUB(".SUB","(.SUB)([\\s]+)"+REGISTER+SPACE+REGISTER+SPACE+REGISTER,
+	SUB(".SUB","(.SUB)([\\s]+)"+REGISTER+SPACE+REGISTER+SPACE+"("+REGISTER+"|"+IMM5+")",
 		".SUB DR SR1 SR2",
-		new String[]{"NOT SR2,SR2",
-					 "ADD SR2,SR2,#1",
-				     "ADD DR,SR1,SR2"}
+		new String[]{
+			"NOT SR2,SR2",
+			"ADD SR2,SR2,#1",
+			"ADD DR,SR1,SR2"}
+	),
+	MUL(".MUL","(.MUL)([\\s]+)"+REGISTER+SPACE+REGISTER+SPACE+"("+REGISTER+"|"+IMM5+")",
+		".MUL DR SR1 SR2",
+		new String[]{
+			"ADD DR,DR,SR2",
+			"ADD SR1,SR1,#-1",
+			"BRP #-2"
+		}
+	),
+	PUSH("PUSH","(PUSH)([\\s]+)"+REGISTER+("[\\s]*"),
+		"PUSH DR",
+		new String[]{
+			"ADD R5,R5,#1",
+			"STR DR,R5,#0"
+		}
 	);
 	public final String value;
 	public final String regex;
@@ -49,8 +65,10 @@ public enum Shorthand{
 		int i = 0;
 		for(String out: output){
 			out = out.replaceAll("DR",parts[1]);
-			out = out.replaceAll("SR1",parts[2]);
-			out = out.replaceAll("SR2",parts[3]);
+			if(parts.length>2)
+				out = out.replaceAll("SR1",parts[2]);
+			if(parts.length>3)
+				out = out.replaceAll("SR2",parts[3]);
 			converted[i++] = out;
 		}
 		return converted;

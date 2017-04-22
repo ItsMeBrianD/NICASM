@@ -163,6 +163,7 @@ public class BetterAssembler
                 realOut += secondPass(s) + " ";
             }
             log.debugSpacer();
+			log.unindent();
             return clean(realOut);
         } else ret: if (Command.contains(parts[0])){
     		log.debug("Command:");
@@ -284,12 +285,16 @@ public class BetterAssembler
 			address = labels.get(in);
 		} else if (in.startsWith("$")){
 			address = variables.get(in);
+		} else if(in.matches(REGEX.IMM8.toString())){
+			log.debug("Immediate value converted to " + Numbers.tcToInt(convertImm(in,8,line)));
+			address = lineAddr + Numbers.tcToInt(convertImm(in,8,line));
 		} else{
 			throw new SyntaxErrorException("Invalid Label on line " + lineNum + "\n\t" + line);
 		}
 		offSet += address - lineAddr;
-		log.debug("Offset from current addr("+lineAddr+") to " + in + "(" + address + ") is " + offSet + " lines");
+		log.debug("Offset from current addr("+lineAddr+") to " + in.substring(1) + "(" + address + ") is " + offSet + " lines");
         log.debug("Converting offset " + offSet +" into binary with " + n + " bits.");
+		log.debug(Numbers.convert(10, 2, true, offSet+"", n),1);
 		return Numbers.convert(10, 2, true, offSet+"", n);
 	}
 
@@ -374,8 +379,7 @@ public class BetterAssembler
 	/**
 	 * Assembles a file from Assembly to Hex.
 	 *
-	 * @param file
-	 *            File to be assembled
+	 * @param file	File to be assembled
 	 */
 	public void assemble(String file){
 		this.log.write("Assembling file " + fileName);
@@ -383,7 +387,6 @@ public class BetterAssembler
 			log.debug("Warning: Files should end with '.nic'!");
 		}
 		initFiles();
-
 		String s = "";
 		while (inFile.hasNextLine()){
 			try{
@@ -404,6 +407,7 @@ public class BetterAssembler
 			inFile = new Scanner(s);
 		} catch (Exception e){
 		}
+		HashMap<Integer,String> lines = new HashMap<Integer,String>();
 		lineAddr = 0;
         lineNum = 1;
 
@@ -411,7 +415,7 @@ public class BetterAssembler
 		while (inFile.hasNextLine()){
 			try{
 				String l = inFile.nextLine();
-
+				lines.put(lineAddr,l);
 				String line = secondPass(l);
 
 				if (line.length() > 0){
@@ -442,13 +446,17 @@ public class BetterAssembler
                 try{
                     String bin = Numbers.convert(16,2,false,l,16);
                     String address = Numbers.convert(10,16,false,addr+"",4);
-                    log.debug(String.format("%5s %10s %s %s",address,label,l,bin));
+					if(lines.get(addr) == null)
+                    	log.debug(String.format("%5s %10s %s %s",address,label,l,bin));
+					else
+						log.debug(String.format("%5s %10s %s %s <- %s",address,label,l,bin,lines.get(addr)));
                 } catch(SyntaxErrorException e){
                     log.writeError(e);
                 }
                 addr++;
             }
         }
+		log.unindent();
         outFile.write(compiled);
         outFile.close();
 	}
