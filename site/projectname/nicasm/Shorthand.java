@@ -58,8 +58,10 @@ public enum Shorthand{
 		int i = 0;
 		for(String out: output){
 			out = out.replaceAll("DR",parts[1]);
-			out = out.replaceAll("SR1",parts[2]);
-			out = out.replaceAll("SR2",parts[3]);
+			if(parts.length>2)
+				out = out.replaceAll("SR1",parts[2]);
+			if(parts.length>3)
+				out = out.replaceAll("SR2",parts[3]);
 			converted[i++] = out;
 		}
 		return converted;
