@@ -19,6 +19,13 @@ public enum Shorthand{
 			"ADD SR1,SR1,#-1",
 			"BRP #-2"
 		}
+	),
+	PUSH("PUSH","(PUSH)([\\s]+)"+REGISTER+("[\\s]*"),
+		"PUSH DR",
+		new String[]{
+			"ADD R5,R5,#1",
+			"STR DR,R5,#0"
+		}
 	);
 	public final String value;
 	public final String regex;
