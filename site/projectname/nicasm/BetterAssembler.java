@@ -187,35 +187,36 @@ public class BetterAssembler
     					break ret;
     				case BLK:
     					int value = Integer.parseInt(Numbers.convert(2, 10, false, convertImm(parts[1], 16, line), 16).substring(1));
-                        String realOut = "";
-                        for (int i = value; i > 0; i--){
-                            log.unindent();
-                            realOut += secondPass(".FILL x0000") + " ";
-                            log.indent();
-        				}
-                        log.unindent();
-                        return clean(realOut);
-                    case BR: // Can appear in 8 forms
-                        parts[0] = parts[0].toUpperCase();
-                        if (parts[0].length() == 2){
-                            out = fillBits("111", out);
-                        } else{
-                            if (parts[0].contains("N"))
-                                out = fillBits("1", out);
-                            else
-                                out = fillBits("0", out);
-                            if (parts[0].contains("Z"))
-                                out = fillBits("1", out);
-                            else
-                                out = fillBits("0", out);
-                            if (parts[0].contains("P"))
-                                out = fillBits("1", out);
-                            else
-                                out = fillBits("0", out);
-                        }
-                        out = fillBits(compOffset(parts[1], 9, line), out);
+              String realOut = "";
+              for (int i = value; i > 0; i--){
+                    log.unindent();
+                    realOut += secondPass(".FILL x0000") + " ";
+                    log.indent();
+      				}
+            	log.unindent();
+              return clean(realOut);
 
-                        break ret;
+	          case BR: // Can appear in 8 forms
+	              parts[0] = parts[0].toUpperCase();
+	              if (parts[0].length() == 2){
+	                  out = fillBits("111", out);
+	              } else{
+	                  if (parts[0].contains("N"))
+	                      out = fillBits("1", out);
+	                  else
+	                      out = fillBits("0", out);
+	                  if (parts[0].contains("Z"))
+	                      out = fillBits("1", out);
+	                  else
+	                      out = fillBits("0", out);
+	                  if (parts[0].contains("P"))
+	                      out = fillBits("1", out);
+	                  else
+	                      out = fillBits("0", out);
+	              }
+	              out = fillBits(compOffset(parts[1], 9, line), out);
+
+	              break ret;
     				default:
     					break;
 				}
@@ -236,6 +237,8 @@ public class BetterAssembler
 					}
 				}
 				switch (com){
+						case PRINT://2 forms
+								if (parts) 
     				case ADD:
     				case AND: // Can have either a register or an immediate value
     					if (parts[3].matches(REGEX.IMM5.toString())){
