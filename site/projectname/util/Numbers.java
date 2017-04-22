@@ -20,7 +20,7 @@ public class Numbers{
             throw new SyntaxErrorException("Possible loss of precision!\n\t"+in+" cannot be normalized to "+normalize+" bits without loss of precision!");
         if(endBase == 2){
             while(out.length() < normalize){
-                if(signed && in.length() > 2 && (in.charAt(0) == '-' || in.charAt(1) == '-'))
+                if(signed && in.length() >= 2 && (in.charAt(0) == '-' || in.charAt(1) == '-'))
                     out = '1' + out;
                 else
                     out = '0' + out;
@@ -47,7 +47,7 @@ public class Numbers{
             in = in.substring(1);
         if(signed){
             if(startBase == 2 && in.charAt(0) == '1' && endBase != 16){
-                in = subFlip(in);
+                in = subFlip(in,2);
                 neg = true;
             } else if (in.startsWith("-")){
                 in = in.substring(1); // Chop off negative sign
@@ -112,8 +112,9 @@ public class Numbers{
                 break;
         }
 
-        if(neg && endBase == 2)
-            out = flipAdd('0'+out);
+        if(neg && endBase == 2){
+            out = flipAdd("0"+out,2);
+        }
         else if(neg){
             if(out.startsWith("#") || out.startsWith("x"))
                 out = out.charAt(0) + "-" + out.substring(1);
@@ -123,49 +124,34 @@ public class Numbers{
         return out;
     }
 
-    private static char flip(char in){
-        if(in == '1')
-            return '0';
-        else
-            return '1';
-    }
-
-    private static String flipAdd(String in){
-        char[] out = new char[in.length()];
-        // Flip Bits
+    public static int tcToInt(String in){
+        in = subFlip(in,2);
+        //System.out.println(in);
+        int out = 0;
         for(int i=0;i<in.length();i++){
-            out[i] = flip(in.charAt(i));
+            out*=2;
+            if(in.charAt(i) == '1')
+                out++;
+            //System.out.println(out);
         }
-        // Add One
-        for(int i=out.length-1;i>=0;i--){
-            out[i] = flip(out[i]);
-            if(out[i] == '1'){
-                break;
-            }
-        }
-        return new String(out);
+        return -1 * out;
     }
 
-    private static String subFlip(String in){
-        char[] out = new char[in.length()];
-        // Subtract one
-		int j =0;
-        for(j=in.length()-1;j>=0;j--){
-			out[j] = flip(in.charAt(j));
-			if(in.charAt(j) == '1'){
-                j--;
-                out[j] = flip(in.charAt(j));
-                break;
-            }
-        }
-		for(;j>=0;j--){
-			out[j] = in.charAt(j);
-		}
-        // Flip Bits
-        for(int i=0;i<out.length;i++){
-            out[i] = flip(out[i]);
-        }
-        return new String(out);
+    private static String flipAdd(String in, int radix){
+        int t = Integer.parseInt(in, radix);
+        t = ~t;
+        t++;
+        String s = Integer.toBinaryString(t);
+        return s.substring(s.length()-in.length());
     }
+
+    private static String subFlip(String in, int radix){
+        int t = Integer.parseInt(in,radix);
+        t--;
+        t = ~t;
+        String s = Integer.toBinaryString(t);
+        return s.substring(s.length()-in.length());
+    }
+
 
 }
