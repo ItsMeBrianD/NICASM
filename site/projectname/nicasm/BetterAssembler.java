@@ -29,6 +29,7 @@ public class BetterAssembler
 	private int lineAddr = 0;
     private int lineNum = 1;
 	private int bC = 15;
+	private int mainOffset = 0;
 
 	/**
 	 * Creates a BetterAssembler based on command line (or given) arguments
@@ -110,6 +111,10 @@ public class BetterAssembler
     		default:
     			out = line;
     			break;
+		}
+		if(clean(line).equals(".MAIN")){
+			log.debug(".MAIN found at address " + Numbers.convert(10,16,false,lineAddr+"",4));
+			mainOffset = lineAddr;
 		}
         lineAddr++;
 		return out;
@@ -237,8 +242,8 @@ public class BetterAssembler
 					}
 				}
 				switch (com){
-						case PRINT://2 forms
-								if (parts) 
+					case PRINT://2 forms
+							break;
     				case ADD:
     				case AND: // Can have either a register or an immediate value
     					if (parts[3].matches(REGEX.IMM5.toString())){
@@ -415,7 +420,13 @@ public class BetterAssembler
 		lineAddr = 0;
         lineNum = 1;
 
-        String compiled = "";
+		String compiled = "";
+		String offset = "";
+        try{
+			offset = Numbers.convert(10,16,false,mainOffset+"",4) + " ";
+		} catch(SyntaxErrorException e){
+
+		}
 		while (inFile.hasNextLine()){
 			try{
 				String l = inFile.nextLine();
@@ -461,7 +472,7 @@ public class BetterAssembler
             }
         }
 		log.unindent();
-        outFile.write("v2.0 raw\n" + compiled + "D000");
+        outFile.write("v2.0 raw\n"+offset + compiled + "D000");
         outFile.close();
 	}
     /**

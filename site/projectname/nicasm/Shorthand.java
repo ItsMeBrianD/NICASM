@@ -91,7 +91,14 @@ public enum Shorthand{
 		".ZERO R",
 		new String[]{
 			"AND R,R,#0"
-		});
+		}
+	),
+	MAIN(".MAIN","(.MAIN)[\\s]*",
+		".MAIN",
+		new String[]{
+			".FILL x0000"
+		}
+	);
 	public final String value;
 	public final String regex;
 	public final String syntax;

@@ -1,6 +1,6 @@
 $VARR     .BLK  x05
 $VAR      .FILL xFFFF
-
+          .MAIN
 *START    ADD R0,R0,R1
           ADD R0,R0,#5
           ADD R0,R0,xF
