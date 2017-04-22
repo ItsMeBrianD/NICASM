@@ -12,11 +12,11 @@ public enum Shorthand{
 			"ADD SR2,SR2,#1",
 			"ADD DR,SR1,SR2"}
 	),
-	MUL(".MUL","(.MUL)([\\s]+)"+REGISTER+SPACE+REGISTER+SPACE+REGISTER,
+	MUL(".MUL","(.MUL)([\\s]+)"+REGISTER+SPACE+REGISTER+SPACE+"("+REGISTER+"|"+IMM5+")",
 		".MUL DR SR1 SR2",
 		new String[]{
-			"ADD DR,DR,SR1",
-			"ADD SR2,SR2,#-1",
+			"ADD DR,DR,SR2",
+			"ADD SR1,SR1,#-1",
 			"BRP #-2"
 		}
 	);
