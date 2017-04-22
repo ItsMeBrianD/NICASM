@@ -154,9 +154,10 @@ public class BetterAssembler
 		String[] parts = line.replaceAll("([\\s]+)|" + REGEX.SPACE, " ").split(" ");
         if(Shorthand.contains(parts[0])){
             log.debug("");
+            log.debugSpacer();
+			log.debug("");
             log.debug("Command is shorthand, converting to basic commands");
             log.debug(line, 1);
-            log.debugSpacer();
             String[] newLines = Shorthand.get(parts[0]).convertSyntax(line,lineAddr);
             String realOut = "";
             for(String s: newLines){

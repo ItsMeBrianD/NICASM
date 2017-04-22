@@ -1,0 +1,2 @@
+$STACK		.FILL	x4000
+			.INIT
