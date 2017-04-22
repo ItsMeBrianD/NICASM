@@ -5,20 +5,22 @@ import site.projectname.util.Logger;
 
 public class SyntaxErrorException extends Exception {
     private String message;
-    public SyntaxErrorException(String line, String regex, int lineNumber, Logger log){
+    public SyntaxErrorException(String line, String regex, int lineNumber){
+        Logger log = Logger.getLog("SyntaxError",Logger.debugGlobal);
         log.debug("SyntaxErrorException -->");
         log.indent();
         log.debug("Generating syntax error message for");
         log.debug(line,1);
         log.debug("Based on");
         log.debug(regex,1);
-        String[] regexs = extractRegex(regex,log);
-        String message = createMessage(line,regexs,lineNumber,log);
+        String[] regexs = extractRegex(regex);
+        String message = createMessage(line,regexs,lineNumber);
         this.message = message;
         log.unindent();
         log.unindent();
     }
-    private String[] extractRegex(String regex, Logger log){
+    private String[] extractRegex(String regex){
+        Logger log = Logger.getLog("SyntaxError",Logger.debugGlobal);
         log.debug("Splitting " + regex);
         int level = 0;
         String temp = "";
@@ -62,7 +64,8 @@ public class SyntaxErrorException extends Exception {
         return out;
     }
 
-    private String createMessage(String line,String[] regexs,int lineNumber,Logger log){
+    private String createMessage(String line,String[] regexs,int lineNumber){
+        Logger log = Logger.getLog("SyntaxError",Logger.debugGlobal);
         int regexsIndex = 0;
         int spaceCounter = 0;
         String message = "";
@@ -83,8 +86,8 @@ public class SyntaxErrorException extends Exception {
             return message;
         }
         for(String s: parts){
-            log.debug("Adding " + s.length() + " to spaceCounter",1);
             log.debug("\tToken: " + s,1);
+            log.indent();
             if(!s.matches(regexs[regexsIndex])){
                 log.debug("|-\t Error <<<<<<<");
                 // Error has been located!
@@ -102,6 +105,8 @@ public class SyntaxErrorException extends Exception {
                 log.debug(s+" matches "+regexs[regexsIndex],1);
                 regexsIndex++;
             }
+            log.debug("Adding " + s.length() + " to spaceCounter",1);
+            log.unindent();
         }
         return message;
     }
