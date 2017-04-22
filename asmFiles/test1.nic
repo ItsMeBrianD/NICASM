@@ -12,12 +12,21 @@ $INTP				.FILL x0030
 					READ R0
 					ADD R0, R0, R4
 					PRINT R2
+					PRINT R0
+					PRINT R2
 
 					PRINT '>'
 					READ R1
 					ADD R1, R1, R4
 					PRINT R2
-					
+					PRINT R1
+					PRINT R2
+
+					PRINT R2
+					PRINT R3
+					PRINT R2
 					ADD R0, R0, R1
+					PRINT R0
+					PRINT R2
 					ADD R0, R0, R3
 					PRINT R0
