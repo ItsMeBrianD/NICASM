@@ -222,7 +222,7 @@ public class BetterAssembler
 				}
 				String[] syntax = com.syntax.split(" ");
 				for (String s : syntax){
-					if (s.contains("R")){
+					if (s.contains("R") && parts[rC].contains("R") && !parts[rC].contains("'R'")){
 						log.debug("Adding Register[" + rC + "] (" + parts[rC] + ")");
 						out = fillBits(convertReg(parts[rC++]), out);
 					} else if (s.contains("X")){
