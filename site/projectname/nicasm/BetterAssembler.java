@@ -407,6 +407,7 @@ public class BetterAssembler
 			inFile = new Scanner(s);
 		} catch (Exception e){
 		}
+		HashMap<Integer,String> lines = new HashMap<Integer,String>();
 		lineAddr = 0;
         lineNum = 1;
 
@@ -414,7 +415,7 @@ public class BetterAssembler
 		while (inFile.hasNextLine()){
 			try{
 				String l = inFile.nextLine();
-
+				lines.put(lineAddr,l);
 				String line = secondPass(l);
 
 				if (line.length() > 0){
@@ -445,13 +446,17 @@ public class BetterAssembler
                 try{
                     String bin = Numbers.convert(16,2,false,l,16);
                     String address = Numbers.convert(10,16,false,addr+"",4);
-                    log.debug(String.format("%5s %10s %s %s",address,label,l,bin));
+					if(lines.get(addr) == null)
+                    	log.debug(String.format("%5s %10s %s %s",address,label,l,bin));
+					else
+						log.debug(String.format("%5s %10s %s %s <- %s",address,label,l,bin,lines.get(addr)));
                 } catch(SyntaxErrorException e){
                     log.writeError(e);
                 }
                 addr++;
             }
         }
+		log.unindent();
         outFile.write(compiled);
         outFile.close();
 	}
