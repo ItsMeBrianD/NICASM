@@ -21,4 +21,8 @@ $VAR      .FILL xFFFF
           .MUL R0,R2,#2
           BR #-5
 
-          PUSH R5
+          .PUSH R5
+          .GETV R5,#0
+          .SETV #0,R2
+
+          .ZERO R0
