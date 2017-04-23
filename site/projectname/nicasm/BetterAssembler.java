@@ -353,15 +353,18 @@ public class BetterAssembler {
 
 	private boolean checkErrors(){
 		if (!errors.isEmpty()){
-			System.err.println(errors.size() + " Error(s) found:");
+			System.err.println("\t"+errors.size() + " Error(s) found:");
+			log.write("\t"+errors.size()+" Error(s) found:");
 			for (String s : errors){
-				System.err.println(s);
-				for (String s2 : s.split("\n"))
-					log.write(s2);
+				for (String s2 : s.split("\n")){
+					System.err.println("\t"+s2);
+					log.write("\t"+s2);
+				}
 			}
 			return true;
 		} else{
-			System.out.println("\t No Errors found.");
+			System.out.println("\tNo Errors found.");
+			log.write("\tNo Errors found.");
 			return false;
 		}
 	}
@@ -408,7 +411,7 @@ public class BetterAssembler {
 	 * @param file	File to be assembled
 	 */
 	public void assemble(String file){
-		this.log.write("Assembling file " + fileName);
+		log.write("Assembling file " + fileName);
 		if (!fileName.endsWith(".nic")){
 			log.debug("Warning: Files should end with '.nic'!");
 		}
@@ -424,6 +427,7 @@ public class BetterAssembler {
 		}
 
 		System.out.println("First Pass Complete.");
+		log.write("First Pass Complete.");
 		if (checkErrors())
 			return;
 		log.debug("Variables found: " + variables.keySet());
@@ -459,6 +463,7 @@ public class BetterAssembler {
             lineNum++;
 		}
 		System.out.println("Second Pass Complete.");
+		log.write("Second Pass Complete.");
 		if (checkErrors())
 			return;
 
