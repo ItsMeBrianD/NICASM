@@ -3,6 +3,3 @@ $TEST       .BLK x0002
 $OTHER      .BLK x0005
             .BLK x0
             BR *LABEL
-            ADD R$,R0,R0
-            ADD R0 R5,R0
-            ADD R0,R0

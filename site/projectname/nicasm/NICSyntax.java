@@ -92,14 +92,14 @@ public enum NICSyntax implements site.projectname.lang.Syntax {
     VARIABLE(
         "([$][A-Z]+)([\\s]*)",
         "VARIABLE",
-        "($[A-Z]*)"
+        "Variable"
         ),
     VALID(
         "[0-9A-Z, *$x#]",
         "VALID"
         ),
     COMMAND(
-        "("+Command.allCommands() + "|" + Shorthand.allCommands() +")(R[0-9]|"+IMM16+")"+"("+SPACE+"(R[0-9]|"+IMM16+")*",
+        "("+Command.allCommands() + "|" + Shorthand.allCommands() +")",
         "COMMAND",
         "Command"
         ),
@@ -149,6 +149,10 @@ public enum NICSyntax implements site.projectname.lang.Syntax {
      * @return          If NICSyntax.value exists
      */
     public boolean contains(String value){
+        if(!value.startsWith("("))
+            value = "(" + value;
+        if(!value.endsWith(")"))
+            value = value + ")";
         for(NICSyntax c: NICSyntax.values()){
             if(c.pattern.equals(value)){
                 return true;
