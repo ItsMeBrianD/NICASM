@@ -11,7 +11,16 @@ public class Numbers{
     public final static HashMap<String,String> hexMap = new HashMap<String,String>();
 
     private static Logger log;
-
+    /**
+     * Converts a number in base startBase to endBase with bit normalization for base 2 and 16
+     * @param   startBase   Base of input number
+     * @param   endBase     Base of output number
+     * @param   signed      Is number signed
+     * @param   in          Number to convert
+     * @param   normalize   Bits to normalize to
+     * @return              in as endBase
+     * @throws  SyntaxErrorException    Thrown if output cannot be normalized to expected normalization
+     */
     public static String convert(int startBase, int endBase, boolean signed, String in, int normalize) throws SyntaxErrorException {
         if(endBase != 2 && endBase != 16)
             return convert(startBase,endBase,signed,in);
@@ -37,6 +46,15 @@ public class Numbers{
         }
         return out;
     }
+    /**
+     * Converts a number in base startBase to endBase
+     * @param   startBase   Base of input number
+     * @param   endBase     Base of output number
+     * @param   signed      Is number signed
+     * @param   in          Number to convert
+     * @return              in as endBase
+     * @throws  SyntaxErrorException    Thrown if output cannot be normalized to expected normalization
+     */
     public static String convert(int startBase, int endBase, boolean signed, String in){
         String out = "";
         int value = 0;
@@ -47,7 +65,7 @@ public class Numbers{
             in = in.substring(1);
         if(signed){
             if(startBase == 2 && in.charAt(0) == '1' && endBase != 16){
-                in = subFlip(in,2);
+                in = subFlip(in);
                 neg = true;
             } else if (in.startsWith("-")){
                 in = in.substring(1); // Chop off negative sign
@@ -123,9 +141,13 @@ public class Numbers{
         }
         return out;
     }
-
+    /**
+     * Converts a two's compliment binary number to an integer
+     * @param   in  Negative Binary Number to convert
+     * @return      Decimal value of in
+     */
     public static int tcToInt(String in){
-        in = subFlip(in,2);
+        in = subFlip(in);
         //System.out.println(in);
         int out = 0;
         for(int i=0;i<in.length();i++){
@@ -137,6 +159,12 @@ public class Numbers{
         return -1 * out;
     }
 
+    /**
+     * Converts a number of base radix to a negative binary number
+     * @param   in      Number to convert
+     * @param   radix   Base of in
+     * @return          In as negative binary number
+     */
     private static String flipAdd(String in, int radix){
         int t = Integer.parseInt(in, radix);
         t = ~t;
@@ -145,8 +173,13 @@ public class Numbers{
         return s.substring(s.length()-in.length());
     }
 
-    private static String subFlip(String in, int radix){
-        int t = Integer.parseInt(in,radix);
+    /**
+     * Converts a negative binary number to a postive binary number
+     * @param   in  Binary number to convert
+     * @return      In as positive binary number
+     */
+    private static String subFlip(String in){
+        int t = Integer.parseInt(in,2);
         t--;
         t = ~t;
         String s = Integer.toBinaryString(t);

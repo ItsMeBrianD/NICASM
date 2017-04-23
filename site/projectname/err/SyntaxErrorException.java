@@ -4,8 +4,21 @@ import java.util.Arrays;
 import site.projectname.lang.Syntax;
 import site.projectname.util.Logger;
 
+/**
+ * Verbose Syntax Error finder. Uses a given {@link site.projectname.lang.Syntax Syntax} to look for errors
+ * @author  Brian Donald
+ * @version 1.0
+ * @since   2017-4-22
+ */
 public class SyntaxErrorException extends Exception {
     private String message;
+    /**
+     * Best constructor for a SyntaxErrorException, it's Syntax scanner requires all of this information to properly create an error message
+     * @param   line        Line on which the error occurs
+     * @param   regex       Regular expression to use while scanning for errors. Should be built with components from the given syntax
+     * @param   lineNumber  Line Number the error occurs on, used for a more verbose error message.
+     * @param   syntax      Given syntax to use while searching for errors
+     */
     public SyntaxErrorException(String line, String regex, int lineNumber, Enum<? extends Syntax> syntax){
         Logger log = Logger.getLog("SyntaxError",Logger.debugGlobal);
         log.debug("SyntaxErrorException -->");
@@ -20,6 +33,15 @@ public class SyntaxErrorException extends Exception {
         log.unindent();
         log.unindent();
     }
+    /**
+     * Breaks a regular expression into it's base tokens
+     * <p>
+     * Example input / output: <br>
+     * Input: ([A-Z])([A-Za-z]+|[0-9]*)
+     * Output: ["([A-Z])","([A-Za-z]+|[0-9]*)"]
+     * @param   regex   Regular expression to break down
+     * @return          Array of all 0-th level tokens
+     */
     private String[] extractRegex(String regex){
         Logger log = Logger.getLog("SyntaxError",Logger.debugGlobal);
         log.debug("Splitting " + regex);
@@ -29,10 +51,10 @@ public class SyntaxErrorException extends Exception {
         boolean close = false;
         for(char c: regex.toCharArray()){
             if(c == '('){
-                if(level > 0)
-                    temp += c;
                 level ++;
                 close = false;
+                if(level == 1)
+                    continue;
             }
             else if (c == ')'){
                 level --;
@@ -40,6 +62,7 @@ public class SyntaxErrorException extends Exception {
                     if(temp.equals("[\\s]+")||temp.equals("[\\s]*")||temp.equals("[,][ ]*")){
                         log.debug("Skipping whitespace token",1);
                         temp = "";
+                        continue;
                     } else {
                         // Add regex to output
                         log.debug("Current out.length : " + out.length,1);
@@ -56,25 +79,32 @@ public class SyntaxErrorException extends Exception {
                         log.debug("Updated out.length : " + out.length,1);
                         log.debug("out :\t" + out[0],1);
                         for(int i=1;i<out.length;i++)
-                            log.debug(out[i],2);
+                            log.debug("\t"+out[i],2);
                         log.debug("",1);
                         close = true;
+                        continue;
                     }
                 } else{
-                    temp += c;
                     close = false;
                 }
             } else if((c == '*' || c == '+') && close){
                 out[out.length-1] = out[out.length-1] + c;
                 close = false;
             } else{
-                temp += c;
                 close = false;
-            }
+            } temp += c;
         }
         return out;
     }
 
+    /**
+     * Creates an error message basd on a given series of Regular Expressions (For best results take from extractRegex), a {@link site.projectname.lang.Syntax Syntax}, and a line
+     * @param       line        Line to parse for errors
+     * @param       regexs      Array of Regular Expressions in the order they should appear as space or comment seperated tokens
+     * @param       lineNumber  Line Number where the error occurs, used to create verbose message
+     * @param       syntaxEnum  Should (but doesn't have to be) any Syntax.HELPER, used to access "static" methods in the syntax
+     * @return                  Error message pointing to the error on the line with a description
+     */
     private String createMessage(String line,String[] regexs,int lineNumber, Enum<? extends Syntax> syntaxEnum){
         Syntax syntax = (Syntax) syntaxEnum;
         Logger log = Logger.getLog("SyntaxError",Logger.debugGlobal);
@@ -90,11 +120,11 @@ public class SyntaxErrorException extends Exception {
             for(int i=regexs.length-parts.length;i>0;i--)
                 spaceCounter += parts[i].length();
             String spacer = "";
-            for(int i=0;i<spaceCounter;i++)
+            for(int i=0;i<line.length();i++)
                     spacer += " ";
 
-            message += spacer + "^ MISSING TOKEN!\n\t";
-            message += "Token must match " + regexs[parts.length-1];
+            message += spacer + "^\n\t";
+            message += syntax.getPossibles(regexs[regexs.length-1]) + "required";
             log.debug("Parts Length: " + parts.length);
             log.debug("Regexs Length: " + regexs.length);
             return message;
@@ -110,15 +140,18 @@ public class SyntaxErrorException extends Exception {
                         spacer += " ";
                 // Construct message
                 if(syntax.contains(regexs[regexsIndex])){
-                    message += spacer +"^";
+                    if(s.length() > 1)
+                        message += spacer +"^";
+                    else
+                        message += spacer;
                     for(int i=0; i<s.length()-2;i++)
                         message += "-";
                     message += "^\n\t" + syntax.getPossibles(regexs[regexsIndex]) + "required";
-                    break;
+                    return message;
                 } else {
                     message += spacer + "^ INVALID TOKEN\n\t";
                     message += "Token must match " + regexs[regexsIndex];
-                    break;
+                    return message;
                 }
             } else {
                 // temp matches, continue
@@ -129,20 +162,31 @@ public class SyntaxErrorException extends Exception {
             log.debug("Adding " + s.length() + " to spaceCounter",1);
             log.unindent();
         }
+        message = syntax.errorCheck(line,message);
         return message;
     }
 
+    /**
+     * Acts as a regular exception, with the addition of outputing the error to the given log
+     * @param   message     Message to print
+     * @param   out         Logger to write to
+     */
     public SyntaxErrorException(String message, Logger out){
         this(message);
         for(String s: message.split("\n"))
             out.write(s);
     }
+    /**
+     * Acts as a regular Exception, however getMessage must be invoked to print
+     * @param   message     Error message
+     */
     public SyntaxErrorException(String message){
         this.message = message;
     }
-    public SyntaxErrorException(){
-        this("Unknown error encountered, stopping!");
-    }
+    /**
+     * Returns the message stored in the exception
+     * @return      Error Message
+     */
     public String getMessage(){
         return this.message;
     }

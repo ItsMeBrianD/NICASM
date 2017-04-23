@@ -6,6 +6,12 @@ import static site.projectname.nicasm.NICSyntax.*;
 import site.projectname.err.SyntaxErrorException;
 import site.projectname.util.Logger;
 
+/**
+ * Contains all subcommands (Useful commands made up of multiple "real" commands)
+ * @author	Brian Donald
+ * @version	1.0
+ * @since	2017-4-22
+ */
 public enum Shorthand{
 	// Math
 	SUB(".SUB","(.SUB)([\\s]+)"+REGISTER+SPACE+REGISTER+SPACE+"("+REGISTER+"|"+IMM5+")",
@@ -99,11 +105,28 @@ public enum Shorthand{
 			".FILL x0000"
 		}
 	);
-	public final String value;
+	/**
+     * Short string version of the command, used for finding a shorthand enum dynamically
+     */
+    public final String value;
+	/**
+	 * Regular expression for the command
+	 */
 	public final String regex;
+	/**
+	 * Syntax of command, used for translating values into real commands
+	 */
 	public final String syntax;
+	/**
+	 * Commands that will be output in place of subcommand
+	 */
 	public final String[] output;
-	public static String allCommands(){
+
+	/**
+	 * Creates a regular expression that will accept all commands
+	 * @return      Regular expression containing a token that will accept all possible commands
+	 */
+	 public static String allCommands(){
 		String out = "";
 		for(Shorthand c: Shorthand.values()){
 			out += c.value + "|";
@@ -112,13 +135,23 @@ public enum Shorthand{
 			out = out.substring(0,out.length()-1);
 		return out;
 	}
+	/**
+	 * @param   value       Short string version of the command, used for finding a command enum dynamically
+	 * @param   regex       Regular expression for the command
+	 * @param   firstFour   First four bits of a command, indicating which command to execute on the processor
+	 * @param   syntax      Syntax of command, used for translating values into real commands
+	 */
 	private Shorthand(String value,String regex,String syntax,String[] output){
 		this.value = value;
 		this.regex = regex;
 		this.syntax = syntax;
 		this.output = output;
 	}
-
+	/**
+     * Checks if given value exists as shorthand
+     * @param   value   Value to check for
+     * @return          If Shorthand.value exists
+     */
 	public static boolean contains(String value){
         for(Shorthand c: Shorthand.values()){
             if(c.value.equals(value)){
@@ -128,6 +161,11 @@ public enum Shorthand{
         return false;
     }
 
+	/**
+	 * Gets a command based on the string value
+	 * @param   value   Value matching Command.value to cast to Command
+	 * @return          Command with value matching input
+	 */
 	public static Shorthand get(String value){
 		for(Shorthand c: Shorthand.values())
 			if(c.value.equals(value))
@@ -135,9 +173,21 @@ public enum Shorthand{
 		return null;
 	}
 
+	/**
+	 * Ensures that the input matches the shorthand's syntax
+	 * @param	in 	Line to check
+	 * @return		Line matches this.regex
+	 */
 	public boolean checkSyntax(String in){
 		return in.matches(this.regex);
 	}
+	/**
+	 * Converts a given line to the executable equivilant
+	 * @param	in 						Shorthand command to convert
+	 * @param	lineNum					Line Number, used for verbose error message
+	 * @return							Array of lines to be inserted in place of the shorthand
+	 * @throws	SyntaxErrorException	Thrown if in doesn't match the regular expression for the command
+	 */
 	public String[] convertSyntax(String in,int lineNum)throws SyntaxErrorException{
 		if(!this.checkSyntax(in))
 			throw new SyntaxErrorException(in,this.regex, lineNum, NICSyntax.HELPER);

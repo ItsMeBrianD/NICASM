@@ -12,6 +12,12 @@ import site.projectname.lang.Syntax;
 import site.projectname.util.Logger;
 import site.projectname.util.Numbers;
 
+/**
+ * Assembles/Compiles .nic files into .nicp files for the NIC (NIC Interactive Computer)
+ * @author	Brian Donald
+ * @version	1.0
+ * @since	2017-4-22
+ */
 public class BetterAssembler {
 	/**
 	 * File to be Assembled
@@ -36,8 +42,7 @@ public class BetterAssembler {
 	/**
 	 * Creates a BetterAssembler based on command line (or given) arguments
 	 *
-	 * @param args
-	 *            Arguments used to construct object
+	 * @param args	Arguments used to construct object
 	 */
 	public BetterAssembler(String[] args){
 		if (args.length != 1 && args.length != 2){
@@ -69,6 +74,11 @@ public class BetterAssembler {
 		initFiles();
 	}
 
+	/**
+	 * Cleans a line to ensure it won't fail regex checking due to white space or comments
+	 * @param	line	Line to be cleaned
+	 * @return			Line without comments,extra white space, and preceeding or following white space
+	 */
 	private String clean(String line){
 		// Take everything before comments
 		line = line.split(";")[0];
@@ -82,7 +92,12 @@ public class BetterAssembler {
 			line = line.substring(0, line.length() - 1);
 		return line;
 	}
-
+	/**
+	 * Searches through line for labels, variables, and the .MAIN command, calculating the addresses for these lines respectively
+	 * @param	line					Line to be checked for labels, variables, and .MAIN
+	 * @return							Line stripped to only the command, all extranious information (Comments, Labels, Variables, .MAIN) is stripped or replaced with .FILL x0000
+	 * @throws	SyntaxErrorException	Thrown when improper syntax is found
+	 */
 	private String firstPass(String line) throws SyntaxErrorException{
 		line = clean(line);
 		if (line.equals("")){
@@ -114,18 +129,30 @@ public class BetterAssembler {
     			out = line;
     			break;
 		}
-		if(clean(line).equals(".MAIN")){
-			log.debug(".MAIN found at address " + Numbers.convert(10,16,false,lineAddr+"",4));
-			mainOffset = lineAddr;
+		switch(line.split(" ")[0]){
+			case ".MAIN":
+				log.debug(".MAIN found at address " + Numbers.convert(10,16,false,lineAddr+"",4));
+				mainOffset = lineAddr;
+				break;
+			case ".BLK":
+				int offset = Integer.parseInt(Numbers.convert(2,10,false,convertImm(line.split(" ")[1],16,line,Command.BLK.regex)).substring(1)) - 1;
+				log.debug("Incrementing lineAddr by " + offset + " due to .BLK");
+				lineAddr+=offset;
+				break;
 		}
         lineAddr++;
 		return out;
 	}
 
-	private String parseVariable(String line) throws SyntaxErrorException {
+	/**
+	 * Parses a given variable ($[A-Z]+) by removing the variable, adding it to the variables map, and returning the following command
+	 * @param	line					Line containing a variable
+	 * @return							Line without variable
+	 */
+	private String parseVariable(String line) {
 		log.debug("Parsing variable on line " + lineNum);
-		String v = "|-" + lineAddr + ":";
-		log.debug(v + Logger.spacer(v, 9) + line);
+		String v = lineAddr + ":";
+		log.debug(v + Logger.spacer(v, 9) + line,1);
 		String[] parts = line.replaceAll("[\\s]+", " ").split(" ");
         variables.put(parts[0], lineAddr);
         if(parts[1].equals(".BLK")){
@@ -137,10 +164,15 @@ public class BetterAssembler {
 		return parts[1] + " " + parts[2];
 	}
 
+	/**
+	 * Parses a given label (*[A-Z]+) by removing the label, adding it to the labels map, and returning the following command
+	 * @param	line	Line containing a label
+	 * @return			Line without label
+	 */
 	private String parseLabel(String line){
 		log.debug("Parsing label on line " + lineNum);
-		String v = "|-" + lineAddr + ":";
-		log.debug(v + Logger.spacer(v, 9) + line);
+		String v = lineAddr + ":";
+		log.debug(v + Logger.spacer(v, 9) + line,1);
 		String[] parts = line.replaceAll("[\\s]+", " ").split(" ");
 		labels.put(parts[0], lineAddr);
 		String out = "";
@@ -150,7 +182,12 @@ public class BetterAssembler {
 			out = out.substring(0, out.length() - 1); // Removes extra space
 		return out;
 	}
-
+	/**
+	 * Converts a given line to hex code, verbose debugging output can be enabled via {@link site.projectname.util.Logger Logger}
+	 * @param	line					Line to convert to hex code
+	 * @return							Line as Hex Code
+	 * @throws	SyntaxErrorException	Thrown when line has invalid syntax according to {@link site.projectname.nicasm.NICSyntax NICSyntax}
+	 */
 	private String secondPass(final String line) throws SyntaxErrorException{
 		if (line.equals(""))
 			return "";
@@ -186,14 +223,14 @@ public class BetterAssembler {
 				switch (com){
     				case FILL:
     					if(parts[1].matches(NICSyntax.IMM16.toString()))
-    						out = fillBits(convertImm(parts[1], 16, line), out);
+    						out = fillBits(convertImm(parts[1], 16, line, Command.FILL.toString()), out);
     					else if(parts[1].matches(NICSyntax.CHAR.toString()))
     						out = fillBits(Numbers.convert(10,2,false,(int)parts[1].charAt(1)+"",16),out);
     					else
     						throw new SyntaxErrorException(clean(line), com.regex, lineNum, this.syntax);
     					break ret;
     				case BLK:
-    					int value = Integer.parseInt(Numbers.convert(2, 10, false, convertImm(parts[1], 16, line), 16).substring(1));
+    					int value = Integer.parseInt(Numbers.convert(2, 10, false, convertImm(parts[1], 16, line, Command.BLK.regex), 16).substring(1));
               String realOut = "";
               for (int i = value; i > 0; i--){
                     log.unindent();
@@ -253,7 +290,7 @@ public class BetterAssembler {
 							out = fillBits(compOffset(parts[rC++], s.length(), line), out);
 						} else if (parts[rC].contains("#") || parts[rC].contains("x")){
 							if (!(com.value.equals("AND") || com.value.equals("ADD")))
-								out = fillBits(convertImm(parts[rC++], s.length(), line), out);
+								out = fillBits(convertImm(parts[rC++], s.length(), line, com.toString()), out);
 						}
 					} else{
 						out = fillBits(s, out);
@@ -265,7 +302,7 @@ public class BetterAssembler {
     					if (parts[3].matches(NICSyntax.IMM5.toString())){
     						log.debug("Adding immediate|reg marker");
     						out = fillBits("1", out);
-    						out = fillBits(convertImm(parts[3], 5, line), out);
+    						out = fillBits(convertImm(parts[3], 5, line, com.toString()), out);
     					} else if (parts[3].matches(NICSyntax.REGISTER.toString())){
     						log.debug("Adding immediate|reg marker");
     						out = fillBits("0", out);
@@ -304,6 +341,14 @@ public class BetterAssembler {
 		return realOut;
 	}
 
+	/**
+	 * Converts a given label or variable to a boolean offset
+	 * @param	in 						Label or Variable used for base
+	 * @param	n						Bits to normalize to
+	 * @param	line					Line requiring offset, used to verbose error messages
+	 * @return							Offset as a binary number
+	 * @throws	SyntaxErrorException	Thrown when label or variable is invalid, or by {@link site.projectname.util.Numbers#convert(int,int,boolean,String,int) Numbers.convert()}
+	 */
 	private String compOffset(String in, int n, String line) throws SyntaxErrorException{
 		int offSet = 0;
 		int address = 0;
@@ -312,8 +357,8 @@ public class BetterAssembler {
 		} else if (in.startsWith("$")){
 			address = variables.get(in);
 		} else if(in.matches(NICSyntax.IMM8.toString())){
-			log.debug("Immediate value converted to " + Numbers.tcToInt(convertImm(in,8,line)));
-			address = lineAddr + Numbers.tcToInt(convertImm(in,8,line));
+			log.debug("Immediate value converted to " + Numbers.tcToInt(convertImm(in,8,line,NICSyntax.IMM8.toString())));
+			address = lineAddr + Numbers.tcToInt(convertImm(in,8,line,NICSyntax.IMM8.toString()));
 		} else{
 			throw new SyntaxErrorException("Invalid Label on line " + lineNum + "\n\t" + line);
 		}
@@ -323,17 +368,31 @@ public class BetterAssembler {
 		log.debug(Numbers.convert(10, 2, true, offSet+"", n),1);
 		return Numbers.convert(10, 2, true, offSet+"", n);
 	}
-
-	private String convertImm(String in, int len, String line) throws SyntaxErrorException{
+	/**
+	 * Converts an immediate value to it's binary value
+	 * @param	in 						Immediate value to convert
+	 * @param	len						Bits to normalize to
+	 * @param	line					Line with immediate value, used for verbose error messages
+	 * @param	syntax					Syntax required for line, used for verbose error messages
+ 	 * @return							Binary value of immediate value
+	 * @throws	SyntaxErrorException	Thrown when an invalid immediate value is given or by {@link site.projectname.util.Numbers#convert(int,int,boolean,String,int) Numbers.convert()}
+	 */
+	private String convertImm(String in, int len, String line, String syntax) throws SyntaxErrorException{
+		log.debug("");
 		if (!(in.startsWith("#") || in.startsWith("x")))
-			throw new SyntaxErrorException("Invalid Immediate Value on " + lineAddr + "\n\t" + line);
+			throw new SyntaxErrorException(line, syntax, lineNum, this.syntax);
 		if (in.startsWith("#"))
 			return Numbers.convert(10, 2, true, in, len);
 		if (in.startsWith("x"))
 			return Numbers.convert(16, 2, true, in, len);
 		return "";
 	}
-
+	/**
+	 * Uses object variable bC to fill bits into a char array representing the hexcode to output (Moves left->right)
+	 * @param	bits 		Bits to fill
+	 * @param	in 			Starting bits
+	 * @return				Starting bits with bits appended to the end
+	 */
 	private char[] fillBits(String bits, char[] in){
 		if (bits.replace("X", "").equals(""))
 			return in;
@@ -350,14 +409,17 @@ public class BetterAssembler {
 		log.debug("");
 		return in;
 	}
-
+	/**
+	 * Checks error ArrayList, if it contains errors prints them, otherwise confirms that no errors were found
+	 * @return		If any errors have been thrown yet.
+	 */
 	private boolean checkErrors(){
 		if (!errors.isEmpty()){
 			System.err.println("\t"+errors.size() + " Error(s) found:");
 			log.write("\t"+errors.size()+" Error(s) found:");
 			for (String s : errors){
+				System.err.println("\t"+s.replace("\n","\n\t"));
 				for (String s2 : s.split("\n")){
-					System.err.println("\t"+s2);
 					log.write("\t"+s2);
 				}
 			}
@@ -369,6 +431,9 @@ public class BetterAssembler {
 		}
 	}
 
+	/**
+	 *	Initializes required files
+	 */
 	private void initFiles(){
 		File iF = null;
 		File oF = null;
