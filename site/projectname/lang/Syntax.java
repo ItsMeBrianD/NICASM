@@ -39,7 +39,7 @@ public interface Syntax {
     /**
      * Checks for Syntax-Specific errors.
      * <p>
-     * For example {@link site.projetname.nicasm.NICSyntax NICSyntax} uses errorCheck to ensure tokens are comma-seperated, as {@link site.projectname.err.SyntaxErrorException SyntaxErrorException} disregards commas as of writing
+     * For example {@link site.projectname.nicasm.NICSyntax NICSyntax} uses errorCheck to ensure tokens are comma-seperated, as {@link site.projectname.err.SyntaxErrorException SyntaxErrorException} disregards commas as of writing
      * @return Error Message regarding syntax-specific errors
      */
     public String errorCheck(String line, String message);
