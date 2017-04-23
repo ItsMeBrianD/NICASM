@@ -110,8 +110,10 @@ public class SyntaxErrorException extends Exception {
                         spacer += " ";
                 // Construct message
                 if(syntax.contains(regexs[regexsIndex])){
-                    message += spacer + "^ INVALID TOKEN \n\t";
-                    message += "Token must be a " + syntax.getPossibles(regexs[regexsIndex]);
+                    message += spacer +"^";
+                    for(int i=0; i<s.length()-2;i++)
+                        message += "-";
+                    message += "^\n\t" + syntax.getPossibles(regexs[regexsIndex]) + "required";
                     break;
                 } else {
                     message += spacer + "^ INVALID TOKEN\n\t";

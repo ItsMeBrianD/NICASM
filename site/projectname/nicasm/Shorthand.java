@@ -2,7 +2,7 @@ package site.projectname.nicasm;
 
 import java.util.HashMap;
 
-import static site.projectname.nicasm.REGEX.*;
+import static site.projectname.nicasm.NICSyntax.*;
 import site.projectname.err.SyntaxErrorException;
 import site.projectname.util.Logger;
 
@@ -140,7 +140,7 @@ public enum Shorthand{
 	}
 	public String[] convertSyntax(String in,int lineNum)throws SyntaxErrorException{
 		if(!this.checkSyntax(in))
-			throw new SyntaxErrorException(in,this.regex, lineNum, REGEX.HELPER);
+			throw new SyntaxErrorException(in,this.regex, lineNum, NICSyntax.HELPER);
 		String[] parts = in.replace(","," ").replace("[\\s]+"," ").split(" ");
 		String[] converted = new String[this.output.length];
 		int i = 1;

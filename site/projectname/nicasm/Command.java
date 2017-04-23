@@ -1,6 +1,6 @@
 package site.projectname.nicasm;
 
-import static site.projectname.nicasm.REGEX.*;
+import static site.projectname.nicasm.NICSyntax.*;
 
 public enum Command {
     ADD  ("ADD",  "(ADD)([\\s]+)" +REGISTER+SPACE+REGISTER+SPACE+"("+REGISTER+"|"+IMM5+")",  "0001", "DR SR1 XXXXXX  "),

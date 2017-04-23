@@ -25,7 +25,7 @@ public class BetterAssembler {
 	private HashMap<String, Integer> labels = new HashMap<String, Integer>();
 	private HashMap<String, Integer> variables = new HashMap<String, Integer>();
 	private ArrayList<String> errors = new ArrayList<String>();
-	private final Enum<? extends Syntax> syntax = REGEX.HELPER;
+	private final Enum<? extends Syntax> syntax = NICSyntax.HELPER;
 
 
 	private int lineAddr = 0;
@@ -92,22 +92,22 @@ public class BetterAssembler {
 		switch (line.charAt(0)){
     		case '$':
     			// Variable
-    			if (line.split(" ")[0].matches(REGEX.VARIABLE.toString()))
+    			if (line.split(" ")[0].matches(NICSyntax.VARIABLE.toString()))
     				out = parseVariable(line);
     			else{
-    				throw new SyntaxErrorException(line, REGEX.VARIABLE.toString(), lineNum, this.syntax);
+    				throw new SyntaxErrorException(line, NICSyntax.VARIABLE.toString(), lineNum, this.syntax);
     			}
     			break;
     		case '*':
     			// Label
-    			if(line.split(" ")[0].matches(REGEX.LABEL.toString())){
+    			if(line.split(" ")[0].matches(NICSyntax.LABEL.toString())){
     				out = parseLabel(line);
                     if(out.equals("")){
                         out += ".FILL x0000";
                     }
                 }
     			else{
-    				throw new SyntaxErrorException(line, REGEX.LABEL.toString(), lineNum, this.syntax);
+    				throw new SyntaxErrorException(line, NICSyntax.LABEL.toString(), lineNum, this.syntax);
     			}
     			break;
     		default:
@@ -158,7 +158,7 @@ public class BetterAssembler {
         log.debug("Parsing command on line " + lineNum);
         log.indent();
 		char[] out = { '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-' };
-		String[] parts = line.replaceAll("([\\s]+)|" + REGEX.SPACE, " ").split(" ");
+		String[] parts = line.replaceAll("([\\s]+)|" + NICSyntax.SPACE, " ").split(" ");
         if(Shorthand.contains(parts[0])){
             log.debug("");
             log.debugSpacer();
@@ -185,9 +185,9 @@ public class BetterAssembler {
 				// Commands that must be handled entirely differently go here
 				switch (com){
     				case FILL:
-    					if(parts[1].matches(REGEX.IMM16.toString()))
+    					if(parts[1].matches(NICSyntax.IMM16.toString()))
     						out = fillBits(convertImm(parts[1], 16, line), out);
-    					else if(parts[1].matches(REGEX.CHAR.toString()))
+    					else if(parts[1].matches(NICSyntax.CHAR.toString()))
     						out = fillBits(Numbers.convert(10,2,false,(int)parts[1].charAt(1)+"",16),out);
     					else
     						throw new SyntaxErrorException(clean(line), com.regex, lineNum, this.syntax);
@@ -227,13 +227,13 @@ public class BetterAssembler {
 				break;
 			case PRINT://2 forms
 				 out = fillBits("1",out);
-				 if(parts[1].matches(REGEX.CHAR.toString())){
+				 if(parts[1].matches(NICSyntax.CHAR.toString())){
 					 out = fillBits("0001",out);
 					 log.debug("Printing from character");
 					 String charVal = Numbers.convert(10,2,false,(int)parts[1].charAt(1)+"",7);
 					 out = fillBits(charVal,out);
 				 }
-				 else if (parts[1].matches(REGEX.REGISTER.toString())){
+				 else if (parts[1].matches(NICSyntax.REGISTER.toString())){
 					 log.debug("Printing from Register[" + rC + "] (" + parts[rC] + ")");
 					 out = fillBits(convertReg(parts[1]), out);
 					 out = fillBits("00000000",out);
@@ -262,11 +262,11 @@ public class BetterAssembler {
 				switch (com){
     				case ADD:
     				case AND: // Can have either a register or an immediate value
-    					if (parts[3].matches(REGEX.IMM5.toString())){
+    					if (parts[3].matches(NICSyntax.IMM5.toString())){
     						log.debug("Adding immediate|reg marker");
     						out = fillBits("1", out);
     						out = fillBits(convertImm(parts[3], 5, line), out);
-    					} else if (parts[3].matches(REGEX.REGISTER.toString())){
+    					} else if (parts[3].matches(NICSyntax.REGISTER.toString())){
     						log.debug("Adding immediate|reg marker");
     						out = fillBits("0", out);
     						log.debug("Adding buffer");
@@ -286,7 +286,7 @@ public class BetterAssembler {
 			}
 		} else{
 			// log.unindent();
-			throw new SyntaxErrorException(line, REGEX.COMMAND.toString(), lineNum, this.syntax);
+			throw new SyntaxErrorException(line, NICSyntax.COMMAND.toString(), lineNum, this.syntax);
 		}
 
 		String realOut = new String(out);
@@ -311,7 +311,7 @@ public class BetterAssembler {
 			address = labels.get(in);
 		} else if (in.startsWith("$")){
 			address = variables.get(in);
-		} else if(in.matches(REGEX.IMM8.toString())){
+		} else if(in.matches(NICSyntax.IMM8.toString())){
 			log.debug("Immediate value converted to " + Numbers.tcToInt(convertImm(in,8,line)));
 			address = lineAddr + Numbers.tcToInt(convertImm(in,8,line));
 		} else{
