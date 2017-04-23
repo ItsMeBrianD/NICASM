@@ -103,6 +103,15 @@ public enum Shorthand{
 	public final String regex;
 	public final String syntax;
 	public final String[] output;
+	public static String allCommands(){
+		String out = "";
+		for(Shorthand c: Shorthand.values()){
+			out += c.value + "|";
+		}
+		while(out.endsWith("|"))
+			out = out.substring(0,out.length()-1);
+		return out;
+	}
 	private Shorthand(String value,String regex,String syntax,String[] output){
 		this.value = value;
 		this.regex = regex;
@@ -129,9 +138,9 @@ public enum Shorthand{
 	public boolean checkSyntax(String in){
 		return in.matches(this.regex);
 	}
-	public String[] convertSyntax(String in,int lineAddr)throws SyntaxErrorException{
+	public String[] convertSyntax(String in,int lineNum)throws SyntaxErrorException{
 		if(!this.checkSyntax(in))
-			throw new SyntaxErrorException(in,this.regex,lineAddr);
+			throw new SyntaxErrorException(in,this.regex, lineNum, REGEX.HELPER);
 		String[] parts = in.replace(","," ").replace("[\\s]+"," ").split(" ");
 		String[] converted = new String[this.output.length];
 		int i = 1;

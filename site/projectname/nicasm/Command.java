@@ -21,8 +21,8 @@ public enum Command {
     STI  ("STI",  "(STI)([\\s]+)" +REGISTER+SPACE+VARIABLE,                                  "1011", "SR XXXXXXXXX   "),
     STR  ("STR",  "(STR)([\\s]+)" +REGISTER+SPACE+REGISTER+SPACE+IMM6,                       "0111", "SR BR XXXXXX   "),
     TRAP ("TRAP", "(TRAP)([\\s]+)("+LABEL +"|"+IMM8+")",                                     "1111", "0000 XXXXXXXX  "),
-    FILL (".FILL",  REGEX.FILL.toString(),                                                   "XXXX", "XXXXXXXXXXXXXXXX"),
-    BLK  (".BLK",   REGEX.BLK.toString(),                                                    "XXXX", "XXXXXXXXXXXXXXXX");
+    FILL (".FILL","(.FILL)([\\s]+)"+IMM16,                                                   "XXXX", "XXXXXXXXXXXXXXXX"),
+    BLK  (".BLK", "(.BLK)([\\s]+)"+IMM16,                                                    "XXXX", "XXXXXXXXXXXXXXXX");
 
     public final String regex;
     public final String firstFour;
@@ -45,6 +45,16 @@ public enum Command {
             }
         } return null;
     }
+
+    public static String allCommands(){
+		String out = "";
+		for(Command c: Command.values()){
+			out += c.value + "|";
+		}
+		while(out.endsWith("|"))
+			out = out.substring(0,out.length()-1);
+		return out;
+	}
 
     public static boolean contains(String value){
         if(value.startsWith("BR"))

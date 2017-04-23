@@ -8,11 +8,11 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 import site.projectname.err.SyntaxErrorException;
+import site.projectname.lang.Syntax;
 import site.projectname.util.Logger;
 import site.projectname.util.Numbers;
 
-public class BetterAssembler
-{
+public class BetterAssembler {
 	/**
 	 * File to be Assembled
 	 */
@@ -25,6 +25,8 @@ public class BetterAssembler
 	private HashMap<String, Integer> labels = new HashMap<String, Integer>();
 	private HashMap<String, Integer> variables = new HashMap<String, Integer>();
 	private ArrayList<String> errors = new ArrayList<String>();
+	private final Enum<? extends Syntax> syntax = REGEX.HELPER;
+
 
 	private int lineAddr = 0;
     private int lineNum = 1;
@@ -93,7 +95,7 @@ public class BetterAssembler
     			if (line.split(" ")[0].matches(REGEX.VARIABLE.toString()))
     				out = parseVariable(line);
     			else{
-    				throw new SyntaxErrorException(line, REGEX.VARIABLE.toString(), lineAddr);
+    				throw new SyntaxErrorException(line, REGEX.VARIABLE.toString(), lineNum, this.syntax);
     			}
     			break;
     		case '*':
@@ -105,7 +107,7 @@ public class BetterAssembler
                     }
                 }
     			else{
-    				throw new SyntaxErrorException(line, REGEX.LABEL.toString(), lineAddr);
+    				throw new SyntaxErrorException(line, REGEX.LABEL.toString(), lineNum, this.syntax);
     			}
     			break;
     		default:
@@ -163,7 +165,7 @@ public class BetterAssembler
 			log.debug("");
             log.debug("Command is shorthand, converting to basic commands");
             log.debug(line, 1);
-            String[] newLines = Shorthand.get(parts[0]).convertSyntax(line,lineAddr);
+            String[] newLines = Shorthand.get(parts[0]).convertSyntax(line,lineNum);
             String realOut = "";
             for(String s: newLines){
                 realOut += secondPass(s) + " ";
@@ -188,7 +190,7 @@ public class BetterAssembler
     					else if(parts[1].matches(REGEX.CHAR.toString()))
     						out = fillBits(Numbers.convert(10,2,false,(int)parts[1].charAt(1)+"",16),out);
     					else
-    						throw new SyntaxErrorException(clean(line), com.regex, lineAddr);
+    						throw new SyntaxErrorException(clean(line), com.regex, lineNum, this.syntax);
     					break ret;
     				case BLK:
     					int value = Integer.parseInt(Numbers.convert(2, 10, false, convertImm(parts[1], 16, line), 16).substring(1));
@@ -237,7 +239,7 @@ public class BetterAssembler
 					 out = fillBits("00000000",out);
 				 } else {
 					 // log.unindent();
-					 throw new SyntaxErrorException(clean(line), com.regex, lineAddr);
+					 throw new SyntaxErrorException(clean(line), com.regex, lineNum, this.syntax);
 				 }
 				 break;
 			}
@@ -273,24 +275,24 @@ public class BetterAssembler
     						out = fillBits(convertReg(parts[3]), out);
     					} else{
     						// log.unindent();
-    						throw new SyntaxErrorException(clean(line), com.regex, lineAddr);
+    						throw new SyntaxErrorException(clean(line), com.regex, lineNum, this.syntax);
     					}
 	                   break ret;
 
 				}
 			} else{
 				// log.unindent();
-				throw new SyntaxErrorException(clean(line), com.regex, lineAddr);
+				throw new SyntaxErrorException(clean(line), com.regex, lineNum, this.syntax);
 			}
 		} else{
 			// log.unindent();
-			throw new SyntaxErrorException("Invalid command on line " + lineNum + "\n\t" + line);
+			throw new SyntaxErrorException(line, REGEX.COMMAND.toString(), lineNum, this.syntax);
 		}
 
 		String realOut = new String(out);
 
 		if (realOut.contains("-"))
-			throw new SyntaxErrorException("Command on line " + lineNum + " has unset bits!\n\t" + line);
+			throw new SyntaxErrorException("COMPILER ERROR:\n\tOutput contains unset bits!");
 
 		log.debug("Line " + lineAddr + " compiled to ");
 		log.debug("(b)" + realOut, 1);

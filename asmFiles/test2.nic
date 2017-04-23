@@ -10,7 +10,7 @@ $VAR      .FILL xFFFF
           BRZ     *START
           BRP     *START
           BRNZ    *START
-          BRZP    *LABEL
+          BRZP    R8
           BRNP    *START
 *LABEL    BR      *LABEL
           JMP     R7
