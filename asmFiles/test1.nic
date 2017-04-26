@@ -1,21 +1,31 @@
 
 $INTP				.FILL x0030
 $TEN				.FILL xFFF6
-
-					.MAIN
+$WORKS				.FILL 'I'
+					.FILL 'T'
+					.FILL '_'
+					.FILL 'W'
+					.FILL 'O'
+					.FILL 'R'
+					.FILL 'K'
+					.FILL 'S'
+					.FILL '!'
+.MAIN
 					LD R5, $TEN
 					LD R3, $INTP
 					ADD R2, R2, xA
+					ADD R2, R2, xA
+					ADD R2, R2, xC
 					NOT R4, R3
 					ADD R4, R4, #1
 
 
- 					PRINT '>'
 					READ R0
 					ADD R0, R0, R4
 					PRINT R2
 
-					PRINT '>'
+					PRINT '+'
+					PRINT R2
 					READ R1
 					ADD R1, R1, R4
 					PRINT R2
@@ -23,10 +33,15 @@ $TEN				.FILL xFFF6
 					ADD R0, R0, R1
 
 					PRINT '='
-					READ R7
+
+					PRINT R2
 					ADD R5, R5, R0
-					BRZ *SKIP
+					BRn *SKIP
 					PRINT '1'
-					AND R0, R0, #0
-*SKIP				ADD R0, R0, R3
+					ADD R0, R0, #-10
+*SKIP
+					ADD R0, R0, R3
 					PRINT R0
+					ADD R1, R7, xA
+					PRINT R2
+					.PRINTS $WORKS
