@@ -1,0 +1,7 @@
+$HELLO	.FILL 'H'
+		.FILL 'E'
+		.FILL 'L'
+		.FILL 'L'
+		.FILL 'O'
+
+.PRINTS	R0,$HELLO

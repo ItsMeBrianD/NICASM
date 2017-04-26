@@ -104,6 +104,17 @@ public enum Shorthand{
 		new String[]{
 			".FILL x0000"
 		}
+	),
+	// Input Output
+	PRINTS(	".PRINTS","(.PRINTS)[\\s]+"+REGISTER+SPACE+HEX16,
+			".PRINTS VAR TR TR2",
+			new String[]{
+				"LDR TR,VAR,TR2",
+				"BRZ #3",
+				"PRINT TR",
+				"BR #-3"
+			}
+
 	);
 	/**
      * Short string version of the command, used for finding a shorthand enum dynamically
@@ -193,7 +204,7 @@ public enum Shorthand{
 			throw new SyntaxErrorException(in,this.regex, lineNum, NICSyntax.HELPER);
 		String[] parts = in.replace(","," ").replace("[\\s]+"," ").split(" ");
 		String[] converted = new String[this.output.length];
-		int i = 1;
+		int i = 0;
 		HashMap<String,String> map = new HashMap<String,String>();
 		for(String key: syntax.replace(","," ").split(" ")){
 			if(!key.equals(value))

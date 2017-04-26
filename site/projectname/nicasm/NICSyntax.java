@@ -149,6 +149,7 @@ public enum NICSyntax implements site.projectname.lang.Syntax {
      * @return          If NICSyntax.value exists
      */
     public boolean contains(String value){
+
         if(!value.startsWith("("))
             value = "(" + value;
         if(!value.endsWith(")"))
