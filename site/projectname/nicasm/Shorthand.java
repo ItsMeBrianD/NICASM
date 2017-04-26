@@ -77,7 +77,7 @@ public enum Shorthand{
 	RETURN(".RETURN","(RETURN)([\\s]+)"+REGISTER,
 		".RETURN DR",
 		new String[]{
-			"COPY R6,R5", // R6 = R5
+			".COPY R6,R5", // R6 = R5
 			"POP R5",
 			"RET",
 			"POP R7",
@@ -87,11 +87,11 @@ public enum Shorthand{
 		}
 	),
 	// Utility
-	SET( ".SET", "(.SET)([\\s]+)"+REGISTER+SPACE+IMM16,
+	SET( ".SET", "(.SET)([\\s]+)"+REGISTER+SPACE+"("+IMM16+"|"+VARIABLE+")",
 		".SET REG VAL",
 		new String[]{
 			".FILL VAL",
-			"LD REG,#-1"
+			"LD REG,#-2"
 		}
 	),
 	COPY(".COPY","(.COPY)([\\s]+)"+REGISTER+SPACE+REGISTER,
@@ -118,16 +118,16 @@ public enum Shorthand{
 			new String[]{
 				"ST R0,$OSR0",		// Store Registers 0 and 1 to load after use
 				"ST R1,$OSR1",		// ^^^
-				"AND R0,R0,#0",		// Zero R0
-				"LEA R0,VAR", 		// Load address into R0
+//				"AND R0,R0,#0",		// Zero R0
+				".SET R0,VAR", 		// Load address into R0
 				"LDR R1,R0,#0",		// Load Character into R1
 				"BRZ #4",			// If x0000 (Null), skip
 				"PRINT R1",			// Print R1
 				"ADD R0,R0,#1",		// Increment R0
 				"BR #-4",			// Loop
 				"LD R0,$OSR0",		// Restore value
-				"LD R1,$OSR1"		// Restore value
-				//"PRINT '\n'"
+				"LD R1,$OSR1",		// Restore value
+				//"PRINT ' '"
 			}
 
 	),
@@ -136,8 +136,7 @@ public enum Shorthand{
 			new String[]{
 				"ST R0,$OSR0",
 				"ST R1,$OSR1",
-				"AND R0,R0,#0",
-				"LEA R0,VAR",
+				".SET R0,VAR",
 				"AND R1,R1,#0",
 				"READ R1",
 				"ADD R1,R1,#-10",
