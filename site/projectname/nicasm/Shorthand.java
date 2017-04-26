@@ -137,14 +137,13 @@ public enum Shorthand{
 				"ST R0,$OSR0",
 				"ST R1,$OSR1",
 				".SET R0,VAR",
-				"AND R1,R1,#0",
 				"READ R1",
 				"ADD R1,R1,#-10",
 				"BRZ #5",
 				"ADD R1,R1,#10",
 				"STR R1,R0,#0",
 				"ADD R0,R0,#1",
-				"BR #-7",
+				"BR #-6",
 				"LD R0,$OSR0",
 				"LD R1,$OSR1"
 			}
