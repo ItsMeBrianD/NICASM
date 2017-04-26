@@ -1,32 +1,34 @@
 
 $INTP				.FILL x0030
+$TEN				.FILL xFFC7
 					.MAIN
 
+					ADD R2, R2, xA
 					LD R3, $INTP
 					NOT R4, R3
 					ADD R4, R4, #1
 
-					ADD R2, R2, xA
 
  					PRINT '>'
 					READ R0
 					ADD R0, R0, R4
-					PRINT R2
-					PRINT R0
 					PRINT R2
 
 					PRINT '>'
 					READ R1
 					ADD R1, R1, R4
 					PRINT R2
-					PRINT R1
-					PRINT R2
 
-					PRINT R2
-					PRINT R3
-					PRINT R2
 					ADD R0, R0, R1
-					PRINT R0
+
+					LD R5, $TEN
+					ADD R5, R5, R0
+					BRz *SKIP
+					PRINT '1'
+					PRINT '0'
+					AND R0, R0, #0
+
+*SKIP				PRINT R0
 					PRINT R2
 					ADD R0, R0, R3
 					PRINT R0
