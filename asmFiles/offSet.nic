@@ -1,1 +1,5 @@
-*LABEL	BR  *LABEL
+$TEST       .BLK x0002
+*LABEL      .FILL x5
+$OTHER      .BLK x0005
+            .BLK x0
+            BR *LABEL

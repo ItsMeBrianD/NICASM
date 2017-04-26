@@ -85,68 +85,14 @@ public class Logger {
 
 	/**
 	 * Starts the Logger, also including a given name of what started the log.
-	 * Also adds itself to the logs map, allowing it to be accessed
-	 * @param	creator 	Package, Class, or other catagory that created and uses the log
-	 */
-	public Logger(String creator) {
-		DateFormat dateFormat = new SimpleDateFormat("_MMMM-dd_HH.mm");
-		File dir = new File("Logs");
-		if(!dir.exists())
-			try{dir.mkdir();}catch(Exception e){}
-		File dir2 = new File(dir, creator);
-		if(!dir2.exists())
-			try{dir2.mkdir();}catch(Exception e){}
-		File log = new File(dir2, creator + dateFormat.format(new Date()) + ".log");
-		try {
-			writer = new PrintWriter(log);
-			write("Log created by "+creator+".");
-		} catch(Exception e){e.printStackTrace();}
-		if(!debug)
-			System.out.println("Log for " + creator + " started!");
-		Logger.logs.put(creator, this);
-	}
-
-	/**
-     * Starts the Logger, also including a given name of what started the log.
- 	 * Also adds itself to the logs map, allowing it to be accessed
-	 * @param	creator		Package, Class, or other catagory that created and uses the log
-	 * @param	debug		Determines if Debugging is enabled. used to toggle verbose output
-	 */
-	public Logger(String creator, boolean debug){
-		this(creator);
-		this.debug = debug;
-		if(debug){
-			spacer();
-			write("Debug enabled!");
-			spacer();
-		}
-	}
-	/**
-	 * Starts the Logger, also including a given name of what started the log.
-	 * Also adds itself to the logs map, allowing it to be accessed
-	 *
-	 * @param	creator		Package, Class, or other catagory that created and uses the log
-	 * @param	logName	Alternate naming convention for log titles
-	 * @param	debug		Determines if Debugging is enabled. used to toggle verbose output
-	 */
-	public Logger(String creator, SimpleDateFormat logName, boolean debug){
-		this(creator, logName);
-		this.debug = debug;
-		if(debug){
-			spacer();
-			write("Debug enabled!");
-			spacer();
-		}
-	}
-	/**
-	 * Starts the Logger, also including a given name of what started the log.
 	 * Also adds itself to the logs map, allowing it to be accessed without needing to pass it within
 	 * a single thread/package
 	 *
 	 * @param	creator Indentifies which class initialized the log
 	 * @param	logName	Alternate naming convention for log titles
+	 * @param	debug		Determines if Debugging is enabled. used to toggle verbose output
 	 */
-	public Logger(String creator, SimpleDateFormat logName) {
+	public Logger(String creator, SimpleDateFormat logName, boolean debug) {
 		DateFormat dateFormat = logName;
 		File dir = new File("Logs");
 		if(!dir.exists())
@@ -159,12 +105,43 @@ public class Logger {
 			log.createNewFile();
 			writer = new PrintWriter(log);
 			write("Log created by "+creator+".");
+			spacer();
 		} catch(Exception e){e.printStackTrace();}
-		if(!debug)
-			System.out.println("Log for " + creator + " started!");
 		Logger.logs.put(creator, this);
+		this.debug = debug;
+		if(debug){
+			spacer();
+			write("Debug enabled!");
+			spacer();
+		}
 	}
-
+	/**
+	 * Starts the Logger, also including a given name of what started the log.
+	 * Also adds itself to the logs map, allowing it to be accessed
+	 * @param	creator		Package, Class, or other catagory that created and uses the log
+	 * @param	debug		Determines if Debugging is enabled. used to toggle verbose output
+	 */
+	public Logger(String creator, boolean debug){
+		this(creator,new SimpleDateFormat("_MMMM-dd_HH.mm"),debug);
+	}
+	/**
+	 * Starts the Logger, also including a given name of what started the log.
+	 * Also adds itself to the logs map, allowing it to be accessed
+	 *
+	 * @param	creator		Package, Class, or other catagory that created and uses the log
+	 * @param	logName	Alternate naming convention for log titles
+	 */
+	public Logger(String creator, SimpleDateFormat logName){
+		this(creator, logName, false);
+	}
+	/**
+	 * Starts the Logger, also including a given name of what started the log.
+	 * Also adds itself to the logs map, allowing it to be accessed
+	 * @param	creator 	Package, Class, or other catagory that created and uses the log
+	 */
+	public Logger(String creator) {
+		this(creator,new SimpleDateFormat("_MMMM-dd_HH.mm"));
+	}
 
 
 	/**

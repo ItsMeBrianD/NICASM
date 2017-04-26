@@ -1,7 +1,13 @@
 package site.projectname.nicasm;
 
-import static site.projectname.nicasm.REGEX.*;
+import static site.projectname.nicasm.NICSyntax.*;
 
+/**
+ * Enumerable representation of all valid base commands
+ * @author  Brian Donald
+ * @version 1.0
+ * @since   2017-4-22
+ */
 public enum Command {
     ADD  ("ADD",  "(ADD)([\\s]+)" +REGISTER+SPACE+REGISTER+SPACE+"("+REGISTER+"|"+IMM5+")",  "0001", "DR SR1 XXXXXX  "),
     AND  ("AND",  "(AND)([\\s]+)" +REGISTER+SPACE+REGISTER+SPACE+"("+REGISTER+"|"+IMM5+")",  "0101", "DR SR1 XXXXXX  "),
@@ -21,13 +27,31 @@ public enum Command {
     STI  ("STI",  "(STI)([\\s]+)" +REGISTER+SPACE+VARIABLE,                                  "1011", "SR XXXXXXXXX   "),
     STR  ("STR",  "(STR)([\\s]+)" +REGISTER+SPACE+REGISTER+SPACE+IMM6,                       "0111", "SR BR XXXXXX   "),
     TRAP ("TRAP", "(TRAP)([\\s]+)("+LABEL +"|"+IMM8+")",                                     "1111", "0000 XXXXXXXX  "),
-    FILL (".FILL",  REGEX.FILL.toString(),                                                   "XXXX", "XXXXXXXXXXXXXXXX"),
-    BLK  (".BLK",   REGEX.BLK.toString(),                                                    "XXXX", "XXXXXXXXXXXXXXXX");
-
+    FILL (".FILL","(.FILL)([\\s]+)"+IMM16,                                                   "XXXX", "XXXXXXXXXXXXXXXX"),
+    BLK  (".BLK", "(.BLK)([\\s]+)"+IMM16,                                                    "XXXX", "XXXXXXXXXXXXXXXX");
+    /**
+     * Regular expression for the command
+     */
     public final String regex;
+    /**
+     * First four bits of a command, indicating which command to execute on the processor
+     */
     public final String firstFour;
+    /**
+     * Syntax for output, can be made up of 0's, 1's, X's, and any token containing 'R'
+     * '0' indicates force 0, '1' indicates force 1, 'X' indicates the bit will be handled by a special case, a token containin 'R' indicates a register value will be loaded
+     */
     public final String syntax;
+    /**
+     * Short string version of the command, used for finding a command enum dynamically
+     */
     public final String value;
+    /**
+     * @param   value       Short string version of the command, used for finding a command enum dynamically
+     * @param   regex       Regular expression for the command
+     * @param   firstFour   First four bits of a command, indicating which command to execute on the processor
+     * @param   syntax      Syntax for output, can be made up of 0's, 1's, X's, and any token containing 'R'
+     */
     Command(String value,String regex,String firstFour,String syntax){
         this.regex = regex;
         this.firstFour = firstFour;
@@ -35,28 +59,47 @@ public enum Command {
         this.syntax = syntax;
     } Command(){this.regex = "";this.firstFour="";this.value="";this.syntax="";}
 
+    /**
+     * Gets a command based on the string value
+     * @param   value   Value matching Command.value to cast to Command
+     * @return          Command with value matching input
+     */
     public static Command get(String value){
         if(value.startsWith("BR"))
             value = value.substring(0,2);
 
         for(Command c: Command.values()){
-            if(Command.valueOf(c).equals(value)){
+            if(c.value.equals(value)){
                 return c;
             }
         } return null;
     }
-
+    /**
+     * Creates a regular expression that will accept all commands
+     * @return      Regular expression containing a token that will accept all possible commands
+     */
+    public static String allCommands(){
+		String out = "";
+		for(Command c: Command.values()){
+			out += c.value + "|";
+		}
+		while(out.endsWith("|"))
+			out = out.substring(0,out.length()-1);
+		return out;
+	}
+    /**
+     * Checks if given value exists as a command
+     * @param   value   Value to check for
+     * @return          If Command.value exists
+     */
     public static boolean contains(String value){
         if(value.startsWith("BR"))
             value = value.substring(0,2);
         for(Command c: Command.values()){
-            if(Command.valueOf(c).equals(value)){
+            if(c.value.equals(value)){
                 return true;
             }
         }
         return false;
-    }
-    public static String valueOf(Command c){
-        return c.value;
     }
 }
