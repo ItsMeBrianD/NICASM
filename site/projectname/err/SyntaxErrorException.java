@@ -117,7 +117,7 @@ public class SyntaxErrorException extends Exception {
         log.debug("Tokens:"+Arrays.toString(line.replace(","," ").replaceAll("[\\s]+"," ").split(" ")),1);
         String[] parts = line.replace(","," ").replaceAll("[\\s]+"," ").split(" ");
         if(parts.length < regexs.length && !regexs[regexs.length-1].endsWith("*")){
-            for(int i=regexs.length-parts.length;i>0;i--)
+            for(int i=regexs.length-parts.length-1;i>0;i--)
                 spaceCounter += parts[i].length();
             String spacer = "";
             for(int i=0;i<line.length();i++)
