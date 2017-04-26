@@ -33,7 +33,6 @@ public class BetterAssembler {
 	private ArrayList<String> errors = new ArrayList<String>();
 	private final Enum<? extends Syntax> syntax = NICSyntax.HELPER;
 
-
 	private int lineAddr = 1;
     private int lineNum = 1;
 	private int bC = 15;

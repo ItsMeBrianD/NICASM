@@ -84,13 +84,13 @@ public class SyntaxErrorException extends Exception {
                         close = true;
                         continue;
                     }
-                } else{
+                } else {
                     close = false;
                 }
-            } else if((c == '*' || c == '+') && close){
+            } else if((c == '*' || c == '+') && close) {
                 out[out.length-1] = out[out.length-1] + c;
                 close = false;
-            } else{
+            } else {
                 close = false;
             } temp += c;
         }

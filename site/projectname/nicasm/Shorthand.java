@@ -134,16 +134,17 @@ public enum Shorthand{
 	READS( 	".READS","(.READS)[\\s]+"+IMM16,
 			".READS VAR",
 			new String[]{
+				// READS
 				"ST R0,$OSR0",
 				"ST R1,$OSR1",
 				".SET R0,VAR",
-				"READ R1",
-				"ADD R1,R1,#-10",
-				"BRZ #5",
-				"ADD R1,R1,#10",
-				"STR R1,R0,#0",
-				"ADD R0,R0,#1",
-				"BR #-6",
+				// READS_LOOP
+				"READ R1",			// Get value
+				"STR R1,R0,#0",		// Store
+				"ADD R0,R0,#1",		// Iterate Pointer
+				"ADD R1,R1,#-10",	// Check for end of line
+				"BRNP #-5",			// LOOP
+				// READS_END
 				"LD R0,$OSR0",
 				"LD R1,$OSR1"
 			}
