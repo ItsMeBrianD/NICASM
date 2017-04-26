@@ -1,7 +1,34 @@
-$HELLO	.FILL 'H'
-		.FILL 'E'
-		.FILL 'L'
-		.FILL 'L'
-		.FILL 'O'
+;$HELLO	.FILL 'H'
+;		.FILL 'E'
+;		.FILL 'L'
+;		.FILL 'L'
+;		.FILL 'O'
+;		.FILL ' '
+;		.FILL 'W'
+;		.FILL 'O'
+;		.FILL 'R'
+;		.FILL 'L'
+;		.FILL 'D'
+;		.FILL '\n'
+;		.FILL 'H'
+;		.FILL 'O'
+;		.FILL 'W'
+;		.FILL ' '
+;		.FILL 'A'
+;		.FILL 'R'
+;		.FILL 'E'
+;		.FILL ' '
+;		.FILL 'Y'
+;		.FILL 'O'
+;		.FILL 'U'
+;		.FILL '?'
+;		.FILL x0
 
-.PRINTS	R0,$HELLO
+		.MAIN
+		.SET R0,#15
+;		.PRINTS $HELLO
+;		.SET R0,x1000
+;		.SET R1,xFFFF
+;		STR R1,R0,#0
+		.READS x0100
+		.PRINTS x0100
