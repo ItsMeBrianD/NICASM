@@ -25,7 +25,7 @@ public enum Command {
     STI  ("STI",  "(STI)([\\s]+)" +REGISTER+SPACE+VARIABLE,                                  "1011", "SR XXXXXXXXX   "),
     STR  ("STR",  "(STR)([\\s]+)" +REGISTER+SPACE+REGISTER+SPACE+IMM6,                       "0111", "SR BR XXXXXX   "),
     TRAP ("TRAP", "(TRAP)([\\s]+)("+LABEL +"|"+IMM8+")",                                     "1111", "0000 XXXXXXXX  "),
-    FILL (".FILL","(.FILL)([\\s]+)("+IMM16+"|"+CHAR+")",                                     "XXXX", "XXXXXXXXXXXXXXXX"),
+    FILL (".FILL","(.FILL)([\\s]+)("+IMM16+"|"+CHAR+"|"+VARIABLE+")",                        "XXXX", "XXXXXXXXXXXXXXXX"),
     BLK  (".BLK", "(.BLK)([\\s]+)"+IMM16,                                                    "XXXX", "XXXXXXXXXXXXXXXX"),
     READ ("READ", "(READ)([\\s]+)"+REGISTER,                                                 "1000", "0 DR 00000000  "),
     PRINT("PRINT","(PRINT)([\\s]+)"+"("+REGISTER+"|"+CHAR+")",                               "1000", "XX XXX XXXXXXX ");
