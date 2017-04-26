@@ -80,17 +80,17 @@ public enum NICSyntax implements site.projectname.lang.Syntax {
         "16-bit signed immediate value"
         ),
 	CHAR(
-		"(['][ -~]['])",
+		"(['][\\\\]?[\\ -~]['])",
 		"CHAR",
         "Character"
-	       ),
+    ),
     LABEL(
-        "([*][A-Z]+)([\\s]*)",
+        "([*][A-Z]+)",
         "LABEL",
         "Label"
         ),
     VARIABLE(
-        "([$][A-Z]+)([\\s]*)",
+        "([$][A-Z0-9]+)",
         "VARIABLE",
         "Variable"
         ),
@@ -183,12 +183,16 @@ public enum NICSyntax implements site.projectname.lang.Syntax {
         String out = "";
         v = "(" + v + ")";
         for(NICSyntax c: NICSyntax.values()){
-            if(v.contains(c.pattern) && !c.pattern.equals("") && !(c.semantic.contains("Hex signed immediate value") || c.semantic.contains("Decimal signed immediate value"))){
+            if(v.contains(c.pattern) &&!c.pattern.equals("")){
                 out += c.semantic + " or ";
-            }// else if (c.pattern.contains(v) && c.name.equals("IMM16")){
-                //out += c.semantic + " or "; // IMM16 likes to act up because COMMAND includes it as a representation of any possible immediate value
-                                            // This requires a special case so a command requiring an IMM16 doesn't say it needs an IMM16 and a Command
-            //}
+                if(c.semantic.contains("bit signed immediate value")){
+                    String temp = "";
+                    for(String o: out.split(" or "))
+                        if(!(o.contains("Hex signed immediate value") || o.contains("Decimal signed immediate value")))
+                            temp += o + " or ";
+                    out = temp;
+                }
+            }
         }
         while(out.endsWith(" or "))
             out = out.substring(0,out.length()-3);
