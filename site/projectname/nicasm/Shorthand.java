@@ -121,10 +121,9 @@ public enum Shorthand{
 //				"AND R0,R0,#0",		// Zero R0
 				".SET R0,VAR", 		// Load address into R0
 				"LDR R1,R0,#0",		// Load Character into R1
-				"BRZ #4",			// If x0000 (Null), skip
-				"PRINT R1",			// Print R1
 				"ADD R0,R0,#1",		// Increment R0
-				"BR #-4",			// Loop
+				"PRINT R1",			// Print R1
+				"BRNP #-4",			// Loop
 				"LD R0,$OSR0",		// Restore value
 				"LD R1,$OSR1",		// Restore value
 				//"PRINT ' '"
