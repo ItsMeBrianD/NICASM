@@ -106,10 +106,11 @@ public class Numbers{
                 }
             }
         }
+
         if(endBase != 10) {
             while(value%endBase > 0 || value > 0){
                 int rem = value % endBase;
-                if(endBase > 10 && rem > 10){
+                if(endBase > 10 && rem >= 10){
                     out = (char)(rem+55) + out;
                 } else {
                     out = rem + out;
