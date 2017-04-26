@@ -34,7 +34,7 @@ public class BetterAssembler {
 	private final Enum<? extends Syntax> syntax = NICSyntax.HELPER;
 
 
-	private int lineAddr = 0;
+	private int lineAddr = 1;
     private int lineNum = 1;
 	private int bC = 15;
 	private int mainOffset = 0;
@@ -226,6 +226,7 @@ public class BetterAssembler {
 				// Commands that must be handled entirely differently go here
 				switch (com){
     				case FILL:
+						log.debug("Filling with " + parts[1]);
     					if(parts[1].matches(NICSyntax.IMM16.toString()))
     						out = fillBits(convertImm(parts[1], 16, line, Command.FILL.toString()), out);
     					else if(parts[1].matches(NICSyntax.CHAR.toString()) && parts[1].charAt(1) != '\\')
@@ -234,6 +235,11 @@ public class BetterAssembler {
 							out = fillBits(Numbers.convert(10,2,false,(int)' '+"",16),out);
 						else if(parts[1].charAt(1) == '\\')
 							out = fillBits(Numbers.convert(10,2,false,getEscape(parts[1].charAt(2)),16),out);
+						else if(parts[1].matches(NICSyntax.VARIABLE.toString()))
+							if(variables.containsKey(parts[1]))
+								out = fillBits(Numbers.convert(10,2,false,variables.get(parts[1])+"",16), out);
+							else
+								throw new SyntaxErrorException("Invalid variable provided on line " + lineNum + "("+lineAddrHex+")");
 						else
     						throw new SyntaxErrorException(clean(line), com.regex, lineNum, this.syntax);
     					break ret;
@@ -563,7 +569,7 @@ public class BetterAssembler {
 		} catch (Exception e){
 		}
 		HashMap<Integer,String> lines = new HashMap<Integer,String>();
-		lineAddr = 0;
+		lineAddr = 1;
         lineNum = 1;
 
 		String compiled = "";
@@ -593,22 +599,33 @@ public class BetterAssembler {
 			return;
 
         if(Logger.debugGlobal){
-            int addr = 0;
-            String[] p = compiled.split(" ");
 			log.debug("Main Offset for program is x" + offset);
+            int addr = 0;
+			String bin = "";
+			String address = "";
+			String label = "";
+			try{
+				bin = Numbers.convert(16,2,false,offset,16);
+				address = Numbers.convert(10,16,false,addr+"",4);
+				label = "";
+				log.debug(String.format("%5s %10s %s %s",address,label,clean(offset),bin));
+				addr++;
+			} catch(SyntaxErrorException e){
+				log.writeError(e);
+			}
+            String[] p = compiled.split(" ");
             for(int i=0;i<p.length;i++){
                 String l = p[i];
-                String label = "";
+				label = "";
                 for(String key: labels.keySet())
                     if(labels.get(key) == addr)
                         label = key;
                 for(String key: variables.keySet())
                     if(variables.get(key) == addr)
                         label = key;
-//            for(String l: compiled.split(" ")){
                 try{
-                    String bin = Numbers.convert(16,2,false,l,16);
-                    String address = Numbers.convert(10,16,false,addr+"",4);
+                    bin = Numbers.convert(16,2,false,l,16);
+                    address = Numbers.convert(10,16,false,addr+"",4);
 					if(lines.get(addr) == null)
                     	log.debug(String.format("%5s %10s %s %s",address,label,l,bin));
 					else
