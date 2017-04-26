@@ -1,31 +1,4 @@
-$VARR     .BLK  x05
-$VAR      .FILL xFFFF
-          .MAIN
-*START    ADD R0,R0,R1
-          ADD R0,R0,#5
-          ADD R0,R0,xF
-
-          BR      *START
-          BRN     *START
-          BRZ     *START
-          BRP     *START
-          BRNZ    *START
-          BRZP    *LABEL
-          BRNP    *START
-*LABEL    BR      *LABEL
-          JMP     R7
-          RET
-
-          .SUB R0,R1,R1
-          .MUL R0,R1,R1
-          .MUL R0,R2,#2
-          BR #-5
-
-          .PUSH R5
-          .GETV R5,#0
-          .SETV #0,R2
-
-          .ZERO R0
-
-          PRINT R0
-          PRINT 'X'
+$VAR 	.FILL x0021
+.MAIN
+LD R0, $VAR
+PRINT R0
