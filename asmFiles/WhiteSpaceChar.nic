@@ -1,0 +1,5 @@
+.MAIN
+PRINT ' '
+PRINT '1'
+PRINT '\n'
+PRINT '2'

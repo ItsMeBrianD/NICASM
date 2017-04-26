@@ -87,6 +87,13 @@ public enum Shorthand{
 		}
 	),
 	// Utility
+	SET( ".SET", "(.SET)([\\s]+)"+REGISTER+SPACE+IMM16,
+		".SET REG VAL",
+		new String[]{
+			".FILL VAL",
+			"LD REG,#-1"
+		}
+	),
 	COPY(".COPY","(.COPY)([\\s]+)"+REGISTER+SPACE+REGISTER,
 		".COPY DR,SR1",
 		new String[]{
@@ -106,15 +113,42 @@ public enum Shorthand{
 		}
 	),
 	// Input Output
-	PRINTS(	".PRINTS","(.PRINTS)[\\s]+"+REGISTER+SPACE+HEX16,
-			".PRINTS VAR TR TR2",
+	PRINTS(	".PRINTS","(.PRINTS)[\\s]+("+VARIABLE+"|"+IMM16+")",
+			".PRINTS VAR",
 			new String[]{
-				"LDR TR,VAR,TR2",
-				"BRZ #3",
-				"PRINT TR",
-				"BR #-3"
+				"ST R0,$OSR0",		// Store Registers 0 and 1 to load after use
+				"ST R1,$OSR1",		// ^^^
+				"AND R0,R0,#0",		// Zero R0
+				"LEA R0,VAR", 		// Load address into R0
+				"LDR R1,R0,#0",		// Load Character into R1
+				"BRZ #4",			// If x0000 (Null), skip
+				"PRINT R1",			// Print R1
+				"ADD R0,R0,#1",		// Increment R0
+				"BR #-4",			// Loop
+				"LD R0,$OSR0",		// Restore value
+				"LD R1,$OSR1"		// Restore value
+				//"PRINT '\n'"
 			}
 
+	),
+	READS( 	".READS","(.READS)[\\s]+"+IMM16,
+			".READS VAR",
+			new String[]{
+				"ST R0,$OSR0",
+				"ST R1,$OSR1",
+				"AND R0,R0,#0",
+				"LEA R0,VAR",
+				"AND R1,R1,#0",
+				"READ R1",
+				"ADD R1,R1,#-10",
+				"BRZ #5",
+				"ADD R1,R1,#10",
+				"STR R1,R0,#0",
+				"ADD R0,R0,#1",
+				"BR #-7",
+				"LD R0,$OSR0",
+				"LD R1,$OSR1"
+			}
 	);
 	/**
      * Short string version of the command, used for finding a shorthand enum dynamically
@@ -204,7 +238,7 @@ public enum Shorthand{
 			throw new SyntaxErrorException(in,this.regex, lineNum, NICSyntax.HELPER);
 		String[] parts = in.replace(","," ").replace("[\\s]+"," ").split(" ");
 		String[] converted = new String[this.output.length];
-		int i = 0;
+		int i = 1;
 		HashMap<String,String> map = new HashMap<String,String>();
 		for(String key: syntax.replace(","," ").split(" ")){
 			if(!key.equals(value))
@@ -214,8 +248,9 @@ public enum Shorthand{
 		for(String out: output){
 			String p = out.replace(",[\\s]+",",").split(" ")[1];
 			out = out.replace(",[\\s]+",",").split(" ")[0];
-			for(String key: map.keySet())
-				p = p.replaceAll(key,map.get(key));
+			for(String key: map.keySet()){
+				p = p.replaceAll(key,map.get(key).replace("$","\\$"));
+			}
 			converted[i++] = out +" "+p;
 		}
 		return converted;

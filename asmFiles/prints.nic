@@ -1,0 +1,7 @@
+.MAIN
+ADD R0,R0,x5
+
+.FILL x0000
+.FILL x0000
+ST R0,#-3
+ST R1,#-3
