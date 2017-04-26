@@ -129,16 +129,19 @@ public class BetterAssembler {
     			out = line;
     			break;
 		}
-		switch(line.split(" ")[0]){
+		switch(out.split(" ")[0]){
 			case ".MAIN":
 				log.debug(".MAIN found at address " + Numbers.convert(10,16,false,lineAddr+"",4));
 				mainOffset = lineAddr;
+				//out = "";
+				//lineAddr --;
 				break;
 			case ".BLK":
-				int offset = Integer.parseInt(Numbers.convert(2,10,false,convertImm(line.split(" ")[1],16,line,Command.BLK.regex)).substring(1)) - 1;
+				int offset = Integer.parseInt(Numbers.convert(2,10,false,convertImm(out.split(" ")[1],16,out,Command.BLK.regex)).substring(1)) - 1;
 				log.debug("Incrementing lineAddr by " + offset + " due to .BLK");
 				lineAddr+=offset;
 				break;
+
 		}
         lineAddr++;
 		return out;
@@ -196,6 +199,7 @@ public class BetterAssembler {
         log.indent();
 		char[] out = { '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-' };
 		String[] parts = line.replaceAll("([\\s]+)|" + NICSyntax.SPACE, " ").split(" ");
+		String lineAddrHex = Numbers.convert(10,16,false,lineAddr+"",4);
         if(Shorthand.contains(parts[0])){
             log.debug("");
             log.debugSpacer();
@@ -224,9 +228,13 @@ public class BetterAssembler {
     				case FILL:
     					if(parts[1].matches(NICSyntax.IMM16.toString()))
     						out = fillBits(convertImm(parts[1], 16, line, Command.FILL.toString()), out);
-    					else if(parts[1].matches(NICSyntax.CHAR.toString()))
+    					else if(parts[1].matches(NICSyntax.CHAR.toString()) && parts[1].charAt(1) != '\\')
     						out = fillBits(Numbers.convert(10,2,false,(int)parts[1].charAt(1)+"",16),out);
-    					else
+						else if(parts[1].equals("'"))
+							out = fillBits(Numbers.convert(10,2,false,(int)' '+"",16),out);
+						else if(parts[1].charAt(1) == '\\')
+							out = fillBits(Numbers.convert(10,2,false,getEscape(parts[1].charAt(2)),16),out);
+						else
     						throw new SyntaxErrorException(clean(line), com.regex, lineNum, this.syntax);
     					break ret;
     				case BLK:
@@ -264,11 +272,18 @@ public class BetterAssembler {
 				break;
 			case PRINT://2 forms
 				 out = fillBits("1",out);
+				 if(parts[1].equals("'"))
+				 	parts[1] = "' '";
+
 				 if(parts[1].matches(NICSyntax.CHAR.toString())){
-					 out = fillBits("0001",out);
-					 log.debug("Printing from character");
-					 String charVal = Numbers.convert(10,2,false,(int)parts[1].charAt(1)+"",7);
-					 out = fillBits(charVal,out);
+					out = fillBits("0001",out);
+					log.debug("Printing from character");
+					String charVal = "";
+					if(parts[1].charAt(1) != '\\')
+				 		charVal = Numbers.convert(10,2,false,(int)parts[1].charAt(1)+"",7);
+					else
+						charVal = Numbers.convert(10,2,false,getEscape(parts[1].charAt(2)),7);
+					out = fillBits(charVal,out);
 				 }
 				 else if (parts[1].matches(NICSyntax.REGISTER.toString())){
 					 log.debug("Printing from Register[" + rC + "] (" + parts[rC] + ")");
@@ -285,7 +300,7 @@ public class BetterAssembler {
 					if (s.contains("R") && parts[rC].contains("R") && !parts[rC].contains("'R'")){
 						log.debug("Adding Register[" + rC + "] (" + parts[rC] + ")");
 						out = fillBits(convertReg(parts[rC++]), out);
-					} else if (s.contains("X")){
+					} else if (s.contains("X") && !com.value.equals("LEA")){
 						if (parts[rC].contains("*") || parts[rC].contains("$")){
 							out = fillBits(compOffset(parts[rC++], s.length(), line), out);
 						} else if (parts[rC].contains("#") || parts[rC].contains("x")){
@@ -315,7 +330,26 @@ public class BetterAssembler {
     						throw new SyntaxErrorException(clean(line), com.regex, lineNum, this.syntax);
     					}
 	                   break ret;
+				   	case LEA:
+						String targetAddr = "";
+						if(parts[2].matches(NICSyntax.HEX16.toString())){
+							int target = Integer.parseInt(parts[2].substring(1),16);
+							String offset = (target-lineAddr-2)+"";
+							targetAddr = Numbers.convert(10,2,true,offset,9);
+						} else if(parts[2].matches(NICSyntax.DEC16.toString())){
+							int target = Integer.parseInt(parts[2].substring(1));
+							String offset = (target-lineAddr-2)+"";
+							targetAddr = Numbers.convert(10,2,true,offset,9);
+						} else if(parts[2].matches(NICSyntax.VARIABLE.toString()))
+							targetAddr = compOffset(parts[2], 9, line);
+						else
+							throw new SyntaxErrorException(clean(line), com.regex, lineNum, this.syntax);
+						log.debug("Offset from " + lineAddrHex + " to " + parts[2] + " is " + Numbers.convert(2,10,true,targetAddr));
+						log.debug("");
+						out = fillBits(targetAddr,out);
+						log.debug("LEA Complete");
 
+				   		break ret;
 				}
 			} else{
 				// log.unindent();
@@ -329,9 +363,10 @@ public class BetterAssembler {
 		String realOut = new String(out);
 
 		if (realOut.contains("-"))
-			throw new SyntaxErrorException("COMPILER ERROR:\n\tOutput contains unset bits!");
+			throw new SyntaxErrorException("COMPILER ERROR:\n\tOutput on line "+lineNum+" contains unset bits!");
 
-		log.debug("Line " + lineAddr + " compiled to ");
+		String hexLineAddr = Numbers.convert(10, 16, false, ""+lineAddr, 4);
+		log.debug("Line (" + hexLineAddr + ") "+ lineAddr +" compiled to ");
 		log.debug("(b)" + realOut, 1);
 		realOut = Numbers.convert(2, 16, false, realOut).substring(1);
 		log.debug("(x)" + realOut, 1);
@@ -350,23 +385,39 @@ public class BetterAssembler {
 	 * @throws	SyntaxErrorException	Thrown when label or variable is invalid, or by {@link site.projectname.util.Numbers#convert(int,int,boolean,String,int) Numbers.convert()}
 	 */
 	private String compOffset(String in, int n, String line) throws SyntaxErrorException{
-		int offSet = 0;
+		int offSet = -1;
 		int address = 0;
 		if (in.startsWith("*")){
 			address = labels.get(in);
 		} else if (in.startsWith("$")){
 			address = variables.get(in);
-		} else if(in.matches(NICSyntax.IMM8.toString())){
-			log.debug("Immediate value converted to " + Numbers.tcToInt(convertImm(in,8,line,NICSyntax.IMM8.toString())));
-			address = lineAddr + Numbers.tcToInt(convertImm(in,8,line,NICSyntax.IMM8.toString()));
+		} else if(in.matches(NICSyntax.IMM16.toString())){
+			log.debug("Immediate value converted to " + Numbers.tcToInt(convertImm(in,8,line,NICSyntax.IMM16.toString())));
+			address = lineAddr + Numbers.tcToInt(convertImm(in,8,line,NICSyntax.IMM16.toString()));
 		} else{
-			throw new SyntaxErrorException("Invalid Label on line " + lineNum + "\n\t" + line);
+			throw new SyntaxErrorException("Error on line " + lineNum + "\n\t" + line);
 		}
 		offSet += address - lineAddr;
 		log.debug("Offset from current addr("+lineAddr+") to " + in.substring(1) + "(" + address + ") is " + offSet + " lines");
         log.debug("Converting offset " + offSet +" into binary with " + n + " bits.");
 		log.debug(Numbers.convert(10, 2, true, offSet+"", n),1);
 		return Numbers.convert(10, 2, true, offSet+"", n);
+	}
+	/**
+	 * Gets the ascii value of an escaped character
+	 * @param	in 	Escaped Character
+	 * @return		Ascii value of escaped character
+	 */
+	private String getEscape(char in){
+		switch(in){
+			case 'n': case 'N':
+				return "13";
+			case 't': case 'T':
+				return "9";
+			default:
+				return "0";
+
+		}
 	}
 	/**
 	 * Converts an immediate value to it's binary value
@@ -378,7 +429,6 @@ public class BetterAssembler {
 	 * @throws	SyntaxErrorException	Thrown when an invalid immediate value is given or by {@link site.projectname.util.Numbers#convert(int,int,boolean,String,int) Numbers.convert()}
 	 */
 	private String convertImm(String in, int len, String line, String syntax) throws SyntaxErrorException{
-		log.debug("");
 		if (!(in.startsWith("#") || in.startsWith("x")))
 			throw new SyntaxErrorException(line, syntax, lineNum, this.syntax);
 		if (in.startsWith("#"))
@@ -482,6 +532,16 @@ public class BetterAssembler {
 		}
 		initFiles();
 		String s = "";
+		try{
+			s += firstPass("$OSR0	.FILL x0000") + '\n';
+			s += firstPass("$OSR1	.FILL x0000") + '\n';
+			s += firstPass("$OSR2	.FILL x0000") + '\n';
+			s += firstPass("$OSR3	.FILL x0000") + '\n';
+			s += firstPass("$OSR4	.FILL x0000") + '\n';
+			lineNum+=3;
+		} catch(SyntaxErrorException e){
+			errors.add(e.getMessage());
+		}
 		while (inFile.hasNextLine()){
 			try{
 				s += firstPass(inFile.nextLine()) + "\n";
@@ -535,6 +595,7 @@ public class BetterAssembler {
         if(Logger.debugGlobal){
             int addr = 0;
             String[] p = compiled.split(" ");
+			log.debug("Main Offset for program is x" + offset);
             for(int i=0;i<p.length;i++){
                 String l = p[i];
                 String label = "";
