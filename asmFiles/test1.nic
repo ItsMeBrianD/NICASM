@@ -43,5 +43,5 @@ $WORKS				.FILL 'I'
 					ADD R0, R0, R3
 					PRINT R0
 					ADD R1, R7, xA
-					PRINT R2
+					PRINT R1
 					.PRINTS $WORKS
