@@ -21,6 +21,12 @@ package: compile checkP checkC
 	@chmod +x ${CLASS}.jar
 	@echo "site.projectname.${PACKAGE}.${CLASS} placed into ${CLASS}.jar with dependencies, and made executable"
 
+install: package
+	@mv ${CLASS}.jar ~/.bin/
+	@echo java -jar ~/.bin/${CLASS}.jar '$$'* > ~/.bin/${PACKAGE}
+	@chmod +x ~/.bin/${PACKAGE}
+	@echo "Command can be run with ${PACKAGE} in command line, if ~/.bin has been added to PATH!"
+
 clean:
 	@rm -rf ${BIN}
 
