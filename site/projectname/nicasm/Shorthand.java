@@ -14,7 +14,7 @@ import site.projectname.util.Logger;
  */
 public enum Shorthand{
 	// Math
-	SUB(".SUB","(.SUB)([\\s]+)"+REGISTER+SPACE+REGISTER+SPACE+"("+REGISTER+"|"+IMM5+")",
+	SUB(".SUB","(.SUB)([\\s]+)"+REGISTER+SPACE+REGISTER+SPACE+REGISTER,
 		".SUB DR SR1 SR2",
 		new String[]{
 			"NOT SR2,SR2",
