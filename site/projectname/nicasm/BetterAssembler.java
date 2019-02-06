@@ -138,7 +138,7 @@ public class BetterAssembler {
 			case ".BLK":
 				int offset = Integer.parseInt(Numbers.convert(2,10,false,convertImm(out.split(" ")[1],16,out,Command.BLK.regex)).substring(1)) - 1;
 				log.debug("Incrementing lineAddr by " + offset + " due to .BLK");
-				lineAddr+=offset;
+				//lineAddr+=offset;
 				break;
 
 		}
