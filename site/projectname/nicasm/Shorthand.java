@@ -123,7 +123,7 @@ public enum Shorthand{
 				"LDR R1,R0,#0",		// Load Character into R1
 				"ADD R0,R0,#1",		// Increment R0
 				"PRINT R1",			// Print R1
-				"BRNP #-3",			// Loop
+				"BRNP #-4",			// Loop
 				"LD R0,$OSR0",		// Restore value
 				"LD R1,$OSR1",		// Restore value
 				//"PRINT ' '"
