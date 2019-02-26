@@ -1,6 +1,13 @@
 # NICASM-Required-Files
 This branch contains all files that are required to use the NICASM Simulated Processors
 
+## Credits
+Work on this project was primarily completed as follows:
+Architecture Design : Nicolas Deckhut
+Assembler Programming : Brian Donald
+
+NICASM was loosely based on the LC3, with several changes made throughout its creation.
+
 ## Instructions
 This program works in tandem with a software called Logisim, the executable can be found [here](logisim/logisim.exe).
 
