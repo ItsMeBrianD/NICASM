@@ -3,7 +3,9 @@ This branch contains all files that are required to use the NICASM Simulated Pro
 
 ## Credits
 Work on this project was primarily completed as follows:
+
 Architecture Design : Nicholas Deckhut
+
 Assembler Programming : Brian Donald
 
 NICASM was loosely based on the LC3, with several changes made throughout its creation.
