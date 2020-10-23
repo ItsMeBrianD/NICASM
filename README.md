@@ -50,11 +50,11 @@ Like other assembly-like languages, NICASM has very rudimentary syntax, consisti
 #### A not as Quick and much Dirtier intro to NICASM Syntax
 ###### Commands
 Glossary
-> DR   = Destination Register
-> SRX  = Source Register 0-7
-> IMMX = X-bit Immediate Value (-1\*((2^x)/2-1) -> ((2^x)/2-1)) ), can be Decimal(#) or Hexadecimal(x) (Example, IMM5 can be \#-15 -> \#15)
-> PC   = Current memory address of program
-> PC'  = Next memory address of program (Most often PC+1)
+> DR   = Destination Register  
+> SRX  = Source Register 0-7  
+> IMMX = X-bit Immediate Value (-1\*((2^x)/2-1) -> ((2^x)/2-1)) ), can be Decimal(#) or Hexadecimal(x) (Example, IMM5 can be \#-15 -> \#15)  
+> PC   = Current memory address of program    
+> PC'  = Next memory address of program (Most often PC+1)  
 ```
 ADD DR, SR1, [SR2|IMM5]
 > Adds SR1 and [SR2|IMM5] and saves result in DR
